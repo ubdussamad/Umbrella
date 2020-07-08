@@ -55,7 +55,7 @@ void setup () {
                                          BLECharacteristic::PROPERTY_WRITE
                                        );
 
-  pCharacteristic->setValue("Hello World says Neil");
+  pCharacteristic->setValue("Working this block.");
   pService->start();
 
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
