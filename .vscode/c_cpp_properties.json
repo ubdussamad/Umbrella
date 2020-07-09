@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "/home/ubdussamad/.arduino15/packages/esp32/tools/**",
+                "/home/ubdussamad/.arduino15/packages/esp32/hardware/esp32/1.0.4/**",
+                "${workspaceFolder}/**",
+                "/home/ubdussamad/.arduino15/packages/esp32/hardware/esp32/1.0.4/libraries/BLE/src",
+                "/home/ubdussamad/.arduino15/packages/esp32/hardware/esp32/1.0.4/tools/sdk/include/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "gnu11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "clang-x64",
+            "forcedInclude": []
+        }
+    ],
+    "version": 4
+}

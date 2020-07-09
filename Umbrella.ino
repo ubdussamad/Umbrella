@@ -13,8 +13,11 @@
 #include <BLEServer.h>
 
 
-#define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
-#define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+#define PROJECT_UMBRELLA_SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
+#define HR_CHARACTERISTIC_UUID               "2A37" // UUID for defining Heart Rate
+#define BODY_TEMP_CHARACTERISTIC_DEFN_UUID   "2A1D" // UUID for defining type of temp.
+#define BODY_TEMP_C_CHARACTERISTIC_UUID      "2A3C" // UUID for defining temp in deg C.
+#define GSR_SENSOR_UUID "ffffffffffff"
 
 
 #define ADC0_CH1 36
@@ -27,6 +30,13 @@
 #define ADC_VOLTAGE 3.5
 
 gsr sensorGsr(ADC0_CH1 , GSR_PWR , ADC_VOLTAGE );
+
+
+class charCallback : BLECharacteristicCallbacks 
+
+
+
+
 
 
 void setup () {
@@ -47,8 +57,11 @@ void setup () {
   sensorGsr.set_adc_voltage(3.3000);
 
   BLEDevice::init("Umbrella");
+  
   BLEServer *pServer = BLEDevice::createServer();
-  BLEService *pService = pServer->createService(SERVICE_UUID);
+  
+  BLEService *pService = pServer->createService(PROJECT_UMBRELLA_SERVICE_UUID);
+  
   BLECharacteristic *pCharacteristic = pService->createCharacteristic(
                                          CHARACTERISTIC_UUID,
                                          BLECharacteristic::PROPERTY_READ |
@@ -56,6 +69,9 @@ void setup () {
                                        );
 
   pCharacteristic->setValue("Working this block.");
+
+  pCharacteristic->setCallbacks( charCallback )
+  
   pService->start();
 
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
