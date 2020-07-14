@@ -3,18 +3,23 @@
         {
             "name": "Linux",
             "includePath": [
+                "/home/ubdussamad/Downloads/arduino-1.8.13/tools/**",
+                "/home/ubdussamad/Downloads/arduino-1.8.13/hardware/arduino/avr/**",
                 "/home/ubdussamad/.arduino15/packages/esp32/tools/**",
                 "/home/ubdussamad/.arduino15/packages/esp32/hardware/esp32/1.0.4/**",
                 "${workspaceFolder}/**",
                 "/home/ubdussamad/.arduino15/packages/esp32/hardware/esp32/1.0.4/libraries/BLE/src",
-                "/home/ubdussamad/.arduino15/packages/esp32/hardware/esp32/1.0.4/tools/sdk/include/**"
+                "/home/ubdussamad/.arduino15/packages/esp32/hardware/esp32/1.0.4/tools/sdk/include/**",
+                "/home/ubdussamad/Arduino/libraries/MAX30100lib/src"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "gnu11",
             "cppStandard": "c++17",
             "intelliSenseMode": "clang-x64",
-            "forcedInclude": []
+            "forcedInclude": [
+                "/home/ubdussamad/Downloads/arduino-1.8.13/hardware/arduino/avr/cores/arduino/Arduino.h"
+            ]
         }
     ],
     "version": 4

@@ -14,6 +14,7 @@
 
 
 #define PROJECT_UMBRELLA_SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
+
 #define HR_CHARACTERISTIC_UUID               "2A37" // UUID for defining Heart Rate
 #define BODY_TEMP_CHARACTERISTIC_DEFN_UUID   "2A1D" // UUID for defining type of temp.
 #define BODY_TEMP_C_CHARACTERISTIC_UUID      "2A3C" // UUID for defining temp in deg C.
@@ -32,9 +33,49 @@
 gsr sensorGsr(ADC0_CH1 , GSR_PWR , ADC_VOLTAGE );
 
 
-class charCallback : BLECharacteristicCallbacks 
 
 
+class GenericCharacteristicCallback : public BLECharateristicCallbacks {
+  
+  void onRead(BLECharacteristic* pCharacteristic) {
+
+    digitalWrite(LED_BLUE , HIGH);
+    delay(50);
+    digitalWrite(LED_BLUE , LOW);
+    return;
+
+  }
+  
+  void onWrite(BLECharacteristic* pCharacteristic) {
+  
+  return;
+  
+  }
+}
+
+class ConnectionCallback : public BLEServerCallbacks {
+  void onConnect ( BLEServer *Server ) {
+
+    short counter = 0x03;
+    while ( counter ) {
+      delay(50);
+      digitalWrite(LED_BLUE , HIGH);
+      delay(50);
+      digitalWrite(LED_BLUE , LOW);
+    }
+  }
+
+  void onDisconnect ( BLEServer *Server ) {
+
+    short counter = 0x03;
+    while ( counter ) {
+      delay(50);
+      digitalWrite(LED_BLUE , HIGH);
+      delay(50);
+      digitalWrite(LED_BLUE , LOW);
+    }
+  }
+}
 
 
 
@@ -70,7 +111,7 @@ void setup () {
 
   pCharacteristic->setValue("Working this block.");
 
-  pCharacteristic->setCallbacks( charCallback )
+  pCharacteristic->setCallbacks( GenericCharacteristicCallback );
   
   pService->start();
 
