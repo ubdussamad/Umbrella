@@ -23,13 +23,15 @@ private:
     short int sample_width = DEFUALT_SAMPLE_WIDTH;
     double last_avg_data;
     double v_adc;
+    bool enable_pin_defined;
     double adc_resolution = DEFAULT_ADC_RESOLUTION;
     int sample_delay = DELAY_PER_SAMPLE;
+
 public:
-    gsr( const short int& channel, const short int& module_en_pin, const double& adc_voltage  );
+    gsr( const short int& channel, const double& adc_voltage, const short int& module_en_pin = - 1  );
     void set_averaging_samples( const short& samples );
     double  get_value( void );
     void set_adc_resolution (const double& value );
     void set_sample_delay ( const short& value);
     void set_adc_voltage ( const double& value);
-}; 
+};

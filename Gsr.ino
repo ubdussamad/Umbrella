@@ -6,6 +6,12 @@
 * This Piece of Software is NOT for pulic sharing.
 * Author: Ubdussamad <ubdussamad@gmail.com>
 */
+#if !defined(GSR_H)
+#define GSR_H
+#include "Gsr.h"
+#endif // GSR_H
+
+
 
 /* Get GSR value.
    Parms: void
@@ -13,12 +19,16 @@
 */
 double gsr::get_value ( void ) {
     double rtn_value = 0;
-    digitalWrite( gsr_module_power , HIGH );
+    if (enable_pin_defined) {
+        digitalWrite( gsr_module_power , HIGH );
+    }
     for ( short i = 0; i < sample_width ; i++ ) {
         delay(sample_delay);
         rtn_value += ( v_adc / adc_resolution ) * analogRead( adc_channel );
     }
+    if (enable_pin_defined) {
     digitalWrite( gsr_module_power , LOW );
+    }
     return (rtn_value/sample_width);
 }
 
@@ -31,15 +41,22 @@ void gsr::set_sample_delay ( const short& value ){
 }
 
 /* Contructor for Gsr class.
-   Parms: Channel Pin Number , Enable Pin Number , ADC refrence voltage.
+   Parms: Channel Pin Number, ADC refrence voltage, Enable Pin Number (if -1 then no enable pin available).
    Return: void
 */
-gsr::gsr( const short int& channel, const short int& module_en_pin, const double& adc_voltage ) {
+gsr::gsr( const short int& channel, const double& adc_voltage, const short int& module_en_pin ) {
     pinMode( channel,  INPUT);
-    pinMode( module_en_pin , OUTPUT);
-    digitalWrite( module_en_pin , LOW );
+
+    if (module_en_pin != -1) {
+        pinMode( module_en_pin , OUTPUT);
+        digitalWrite( module_en_pin , LOW );
+        enable_pin_defined = 1;
+        gsr_module_power = module_en_pin;
+    }
+    else {
+        enable_pin_defined = 0;
+    }
     adc_channel = channel;
-    gsr_module_power = module_en_pin;
     v_adc = adc_voltage;
 }
 
@@ -52,11 +69,11 @@ void gsr::set_adc_resolution ( const double& value ) {
 }
 
 /* Set the Voltage of the ADC in use. 
-   Parms: Voltage (Volts)
+   Parms: Voltage (Volts > 0)
    Return: void
 */
 void gsr::set_adc_voltage ( const double& value ) {
-    v_adc = value;
+    v_adc = value <= 0 ? 1: value ;
 }
 
 /* Set the number of samples to take for each measure. 
