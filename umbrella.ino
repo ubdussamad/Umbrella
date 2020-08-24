@@ -11,14 +11,19 @@
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEServer.h>
+#include <Arduino.h>
 
 
-#define PROJECT_UMBRELLA_SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
-
-#define HR_CHARACTERISTIC_UUID               "2A37" // UUID for defining Heart Rate
-#define BODY_TEMP_CHARACTERISTIC_DEFN_UUID   "2A1D" // UUID for defining type of temp.
-#define BODY_TEMP_C_CHARACTERISTIC_UUID      "2A3C" // UUID for defining temp in deg C.
-#define GSR_SENSOR_UUID "ffffffffffff"
+#define DEVICE_INFO_SERIVCE                    "0x180A" // SiG Standard
+#define BATTERY_SERVICE_UUID                   "0x180F" // SiG Standard
+#define HR_SERVICE_UUID                        "0x180D" // SiG Standard Heart Rate Service
+#define HR_CHARACTERISTIC_UUID                 "0x2A37" // SiG Standard Heart Rate Measurement Serivce
+#define BODY_TEMP_SERVICE_UUID                 "0x1809" // SiG Standard , Health Thermometer Service
+#define BODY_TEMP_CHARACTERISTIC_UUID          "0x2A1C" // SiG Standard , Health Thermometer Charac..
+#define BODY_TEMP_T_DESC_CHARACTERISTIC_UUID   "0x2A1F" // Temperature Celsius Descriptor
+#define BODY_TEMP_T_DESIG_CHARACTERISTIC_UUID  "0x2A1D" // Temp type Descriptor
+#define GSR_SENSOR_SERVICE_UUID                "4fafc201-1fb5-459e-8fcc-c5c9c331914b" // Custom UUID for GSR Sensor
+#define GSR_SENSOR_CHARACTERISTIC_UUID         "248efce7-3ccc-48ee-ba7f-17a2e891266b" // Custom Characteristic UUID
 
 
 #define ADC0_CH1 36
@@ -35,7 +40,7 @@ gsr sensorGsr(ADC0_CH1 , GSR_PWR , ADC_VOLTAGE );
 
 
 
-class GenericCharacteristicCallback : public BLECharateristicCallbacks {
+class GenericCharacteristicCallback : public BLECharacteristicCallbacks {
   
   void onRead(BLECharacteristic* pCharacteristic) {
 
@@ -51,7 +56,7 @@ class GenericCharacteristicCallback : public BLECharateristicCallbacks {
   return;
   
   }
-}
+};
 
 class ConnectionCallback : public BLEServerCallbacks {
   void onConnect ( BLEServer *Server ) {
@@ -75,7 +80,7 @@ class ConnectionCallback : public BLEServerCallbacks {
       digitalWrite(LED_BLUE , LOW);
     }
   }
-}
+};
 
 
 
