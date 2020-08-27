@@ -12,7 +12,7 @@
 
 
 #define COMPILING 0
-#define ENABLE_GSR 0
+#define ENABLE_GSR 1
 #define ENABLE_LCD 0
 #define LOG Serial.println
 
@@ -39,7 +39,7 @@
 #if (ENABLE_GSR)
 #if !defined(GSR_H)
 #define GSR_H
-#include "Gsr.h"
+#include "Gsr.hpp"
 #endif // GSR_H
 #endif
 
@@ -148,28 +148,25 @@ void setup () {
 
 
   BLEDevice::init("Umbrella");
-
   LOG("Initialized the device.");
-  
   BLEServer *pServer = BLEDevice::createServer();
-
   LOG("Initialized the Server.");
 
 
+
   BLEService *hrService = pServer->createService( HR_SERVICE_UUID );
-
   LOG("Created Service.");
-
   hrCharacteristic = hrService->createCharacteristic(
                                          HR_CHARACTERISTIC_UUID,
                                          BLECharacteristic::PROPERTY_NOTIFY);
-  hrCharacteristic->addDescriptor(new BLE2902());
+  BLEDescriptor* d2902 = new BLE2902();
+  uint8_t descHex[1] = {0x00000011}; // NU,NU,NU,NU,NU,NU, Indication bit, Notification bit.
+  d2902->setValue(descHex,1);
+  hrCharacteristic->addDescriptor(d2902);
   // BLEDescriptor hrdesc(BLEUUID((uint16_t)0x290C));
 
   uint8_t hrFlag[2] = {80, 0b11111111};
-  LOG("\n\n------------------------XXXXXXXXXXXXXXX---------------\n\n");
   hrCharacteristic->setValue( hrFlag , 2 ); // BPM , DUMMY DATA , Please Comment out
-  LOG("\n\n");
 
   // hrCharacteristic->
 
@@ -211,12 +208,20 @@ void setup () {
   Serial.println("Characteristic defined! Now you can read it in your phone!");
 }
 
-uint8_t hrg[2] = {80, 0b1110000};
+// float f = 128.5;
+// uint32_t x = *((uint32_t*)&f);
+// uint16_t h = ((x>>16)&0x8000)|((((x&0x7f800000)-0x38000000)>>13)&0x7c00)|((x>>13)&0x03ff);
+// uint8_t f0 = (uint8_t)h;
+// uint8_t f1 = (uint8_t) (h>>4);
+
+//                CONFIG 98    BPM
+uint8_t hrg[] = { 0b1100010 ,  80  };
+
 void loop () {
   
   hrCharacteristic->setValue(hrg , 2);
-  hrg[0]++;
-  hrg[1]++;
+  // hrg[0]++;
+  // hrg[1]++;
   hrCharacteristic->notify(1);
   delay(1800);
 
