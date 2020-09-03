@@ -8,42 +8,56 @@
 */
 #if !defined(GSR_H)
 #define GSR_H
-#include "Gsr.h"
+#include "Gsr.hpp"
 #endif // GSR_H
 
+#define GSR_LOG_LEVEL 0
+// 0: No logging
+// 1: Basic Info logging.
+// 2: All Info logging.
+// 3: Verbose Logging
 
 
-/* Get GSR value.
-   Parms: void
-   Return: [float] Gsr value in millivolts.
-*/
+
+/**
+ * @brief Get GSR value.
+ * @return [float] Gsr value in millivolts.
+ */
 double gsr::get_value ( void ) {
     double rtn_value = 0;
     if (enable_pin_defined) {
         digitalWrite( gsr_module_power , HIGH );
+        #if (GSR_LOG_LEVEL)
+            Serial.println("Turning GSR on.");
+        #endif
     }
     for ( short i = 0; i < sample_width ; i++ ) {
         delay(sample_delay);
-        rtn_value += ( v_adc / adc_resolution ) * analogRead( adc_channel );
+        rtn_value += ( (v_adc*1000) / adc_resolution ) * analogRead( adc_channel );
     }
     if (enable_pin_defined) {
-    digitalWrite( gsr_module_power , LOW );
+        digitalWrite( gsr_module_power , LOW );
+        #if (GSR_LOG_LEVEL)
+            Serial.println("Turning GSR off.");
+        #endif
     }
     return (rtn_value/sample_width);
 }
 
-/* Set the time delay between consecutive samples in milliseconds.
-    Parms: Delay Value in Milliseconds 
-    Return: void
-*/
+/**
+ * @brief Set the time delay between consecutive samples in milliseconds.
+ * @param [in] Delay Value in Milliseconds.
+ */
 void gsr::set_sample_delay ( const short& value ){
-    sample_delay = value;
+    sample_delay = value > 0 ? value : 10;
 }
 
-/* Contructor for Gsr class.
-   Parms: Channel Pin Number, ADC refrence voltage, Enable Pin Number (if -1 then no enable pin available).
-   Return: void
-*/
+/**
+ * @brief Contructor for Gsr class.
+ * @param [in] Channel Pin Number
+ * @param [in] ADC refrence voltage
+ * @param [in] Enable Pin Number (if -1 then no enable pin available).
+ */
 gsr::gsr( const short int& channel, const double& adc_voltage, const short int& module_en_pin ) {
     pinMode( channel,  INPUT);
 
@@ -64,8 +78,12 @@ gsr::gsr( const short int& channel, const double& adc_voltage, const short int& 
    Parms: 2^Resolution ( 1024 for 10Bit ADC )
    Return: void
 */
-void gsr::set_adc_resolution ( const double& value ) {
-    adc_resolution = value;
+void gsr::set_adc_resolution ( const int& value ) {
+    adc_resolution = (double) (1<<value);
+    #if (DEBUG)
+    Serial.print("The adc resolution is set to: ");
+    Serial.println(adc_resolution);
+    #endif
 }
 
 /* Set the Voltage of the ADC in use. 

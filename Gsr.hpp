@@ -9,6 +9,9 @@
 
 // Prototype for GSR class
 
+#if !defined(GSR_H)
+#define GSR_H
+
 #define DEFUALT_SAMPLE_WIDTH 20
 #define DEFAULT_ADC_RESOLUTION 4096 // x = 2^Resolution
 #define MAXIMUM_BUFFER_SIZE 1000 
@@ -34,7 +37,11 @@ public:
     gsr( const short int& channel, const double& adc_voltage, const short int& module_en_pin = - 1  );
     void set_averaging_samples( const short& samples );
     double  get_value( void );
-    void set_adc_resolution (const double& value );
+    void set_adc_resolution (const int& value );
     void set_sample_delay ( const short& value);
     void set_adc_voltage ( const double& value);
+    virtual void voltageOfsetCorrection (double deltaV);
+    virtual double getVoffCorrectedvalue(void);
 };
+
+#endif
