@@ -29,11 +29,15 @@
 #endif
 
 #if (ENABLE_HR)
+#include <Wire.h>
 #include "MAX30100_PulseOximeter.h"
 #endif
 
 #if (ENABLE_OLED)
 #include <Wire.h>
+#if (!COMPILING)
+#define U8X8_USE_PINS
+#endif
 #include <U8g2lib.h>
 #endif
 
@@ -44,6 +48,9 @@
 #define HR_SERVICE_UUID                        "180D" // SiG Standard Heart Rate Service
 #define HR_CHARACTERISTIC_UUID                 "2A37" // SiG Standard Heart Rate Measurement Serivce
 #define HR_CP_CHARACTERISTIC_UUID              "2A39" // SiG Standard Heart rate Control Point
+
+#define POX_SERVICE_UUID                       "1822" // SiG Standard, PulseOximeter Service UUID
+#define POX_CHARACTERISTIC_UUID                "2A5F" // SiG Standard, PulseOximeter Characteristic UUID
 
 #define BODY_TEMP_SERVICE_UUID                 "1809" // SiG Standard , Health Thermometer Service
 #define BODY_TEMP_CHARACTERISTIC_UUID          "2A1C" // SiG Standard , Health Thermometer Charac..
@@ -122,11 +129,12 @@ PulseOximeter pulseOx;
 #endif
 
 
-/* Namespace Contaning system wide Vars  */
-namespace umbrellaSysVars {
+/* Namespace Contaning System-Wide Vars  */
+namespace uSysVars {
 
 /* System wide counter. */
-long int sysNotifyCounter = 0;
+RTC_DATA_ATTR int bootCount(0); // Counts the number of bootups.
+long int sysNotifyCounter(0); // TODO: This might Persist even when the uP is in sleep
 
 
 /* This block contains Global system event flags. */
@@ -134,13 +142,65 @@ bool isConnected(false);
 bool hrInitFailed(false);
 
 /* This block decalers global constructor handles for BLE characteristics/Services and Servers. */
-BLEServer *umbrellaServer;
+BLEServer         *umbrellaServer;
 BLECharacteristic *hrCharacteristic;
+BLECharacteristic *poxCharacteristic;
 BLECharacteristic *gsrCharacteristic;
-BLECharacteristic *TempCharacteristic;
-BLECharacteristic *GyroCharacteristic;
+BLECharacteristic *tempCharacteristic;
+BLECharacteristic *gyroCharacteristic;
 
 }
+
+
+#if (ENABLE_HR)
+/**
+ * @brief This is a method which will be called when the
+ * PulseOximeter detects a heart beat, this routine
+ * will call all the other sensors to collect data and notify.
+ * Finally, the whole chip will be shutdown and woken up after
+ * a set interval from start.
+ */
+void onBeatDetectedCb() { 
+  /** TODO: This should trigger notify funcs for all services,
+   * as it's the last thing to gather data.
+   * 
+   * If applicable, it should also turn everything (Sensors)
+   * off before going into powerdow mode.
+   * 
+   * It should also put the whole processor to sleep after finally
+   * sending all the data.
+   * 
+   * Also, trigger all the notify after a couple of beat detections maybe,
+   * thus it'll have a callback counter which counts how many times the
+   * beat has been detected.
+   */      
+  LOG("Beat Detected. Rate is: ");
+  float hr = pulseOx.getHeartRate();
+  uint8_t hrD[] = { 0b01100010, hr };
+  LOG(hrD[1]);
+  int x = 0xe;
+  uint8_t spo2 = pulseOx.getSpO2();
+  uint8_t poxD[] = { 0b00000000, spo2 , hr };
+
+  uSysVars::hrCharacteristic->setValue(hrD , 2);
+  uSysVars::hrCharacteristic->notify(1);
+
+  uSysVars::poxCharacteristic->setValue(poxD,2);
+  uSysVars::poxCharacteristic->notify(1);
+
+  double gsrD = sensorGsr.get_value();
+  /** After fetching value, the GSR sensor is automatically
+   *  shutdown by its handler class.
+   */
+  uSysVars::gsrCharacteristic->setValue(gsrD);
+  uSysVars::gsrCharacteristic->notify(1);
+
+  pulseOx.shutdown(); // Shutting down the Pulse Oximeter after Reading data.
+
+
+}
+#endif
+
 
 #if (ENABLE_GSR)
 class gsrCharCB : public BLECharacteristicCallbacks {
@@ -158,7 +218,7 @@ class gsrCharCB : public BLECharacteristicCallbacks {
 
 class ConnectionCallback : public BLEServerCallbacks {
   void onConnect ( BLEServer Server ) {
-      umbrellaSysVars::isConnected = true;
+      uSysVars::isConnected = true;
       short counter = 3;
       while ( counter-- ) {
       delay(80);
@@ -169,9 +229,9 @@ class ConnectionCallback : public BLEServerCallbacks {
   }
 
   void onDisconnect ( BLEServer Server ) {
-      umbrellaSysVars::isConnected = false;
+      uSysVars::isConnected = false;
       short counter = 3;
-      while ( --counter ) {
+      while ( counter-- ) {
         delay(80);
         digitalWrite(LED_RED , HIGH);
         delay(100);

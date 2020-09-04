@@ -13,13 +13,16 @@
 /* Block for enabling different types of perpherals. */
 #define COMPILING    0
 #define ENABLE_GSR   1
-#define ENABLE_OLED  0
+#define ENABLE_OLED  1
 #define ENABLE_HR    1
 #define ENABLE_GYRO  0
 #define LOG Serial.println
 
-#include "umbrella.hpp"
+/* Timeout Macros Block */
+#define DATA_NOTIFY_DELAY 60000
 
+
+#include "umbrella.hpp"
 
 
 void setup () {
@@ -46,41 +49,49 @@ void setup () {
 
   BLEDevice::init("Umbrella");
   LOG("Initialized the device.");
-  umbrellaSysVars::umbrellaServer = BLEDevice::createServer();
-  umbrellaSysVars::umbrellaServer->setCallbacks(new ConnectionCallback);
+  uSysVars::umbrellaServer = BLEDevice::createServer();
+  uSysVars::umbrellaServer->setCallbacks(new ConnectionCallback);
   LOG("Initialized the Server.");
 
 
   #if (ENABLE_HR)
-  umbrellaSysVars::hrInitFailed = !pulseOx.begin();
-  if (umbrellaSysVars::hrInitFailed) {
+  uSysVars::hrInitFailed = !pulseOx.begin();
+  if (uSysVars::hrInitFailed) {
         LOG("ERROR: Failed to initialize pulse oximeter");
   }
   else {
-  BLEService *hrService = umbrellaSysVars::umbrellaServer->createService( HR_SERVICE_UUID );
-  umbrellaSysVars::hrCharacteristic = hrService->createCharacteristic(HR_CHARACTERISTIC_UUID, BLE_NOTIFY);
+  pulseOx.setOnBeatDetectedCallback(onBeatDetectedCb); /* Callback if a beat is detected, notify the Client then. */
+  BLEService *hrService = uSysVars::umbrellaServer->createService( HR_SERVICE_UUID );
+  uSysVars::hrCharacteristic = hrService->createCharacteristic(HR_CHARACTERISTIC_UUID, BLE_NOTIFY);
   BLEDescriptor* d2902 = new BLE2902();
   uint8_t descHex[2] = {0b1111,0b1111}; // NU,NU,NU,NU,NU,NU, Indication bit, Notification bit.
   d2902->setValue(descHex,2);
-  umbrellaSysVars::hrCharacteristic->addDescriptor(d2902);
+  uSysVars::hrCharacteristic->addDescriptor(d2902);
   BLECharacteristic *hrCpCharacteristic = hrService->createCharacteristic(HR_CP_CHARACTERISTIC_UUID, BLE_NOTIFY);
   hrService->start();
+
+  BLEService *poxService = uSysVars::umbrellaServer->createService( POX_SERVICE_UUID );
+  uSysVars::poxCharacteristic = poxService->createCharacteristic(POX_CHARACTERISTIC_UUID, BLE_NOTIFY | BLE_READ);
+  uSysVars::poxCharacteristic->addDescriptor(d2902);
+  poxService->start();
   }
+
   #endif
   
   #if (ENABLE_GSR)
-  BLEService *gsrService = umbrellaSysVars::umbrellaServer->createService( GSR_SENSOR_SERVICE_UUID );
-  umbrellaSysVars::gsrCharacteristic = gsrService->createCharacteristic(GSR_SENSOR_CHARACTERISTIC_UUID, BLE_READ);
-  umbrellaSysVars::gsrCharacteristic->addDescriptor(new BLE2902);
-  umbrellaSysVars::gsrCharacteristic->setCallbacks( new gsrCharCB );
+  BLEService *gsrService = uSysVars::umbrellaServer->createService( GSR_SENSOR_SERVICE_UUID );
+  uSysVars::gsrCharacteristic = gsrService->createCharacteristic(GSR_SENSOR_CHARACTERISTIC_UUID, BLE_READ);
+  uSysVars::gsrCharacteristic->addDescriptor(new BLE2902);
+  uSysVars::gsrCharacteristic->setCallbacks( new gsrCharCB );
   gsrService->start();
   #endif
+
   
 
 
   BLEAdvertising* pAdvertising = BLEDevice::getAdvertising();
   #if (ENABLE_HR)
-  if (!umbrellaSysVars::hrInitFailed) {pAdvertising->addServiceUUID(HR_SERVICE_UUID);}
+  if (!uSysVars::hrInitFailed) {pAdvertising->addServiceUUID(HR_SERVICE_UUID);}
   #endif
   #if (ENABLE_GSR)
   pAdvertising->addServiceUUID(GSR_SENSOR_SERVICE_UUID);
@@ -96,17 +107,16 @@ void setup () {
 }
 
 
-uint8_t hrg[] = { 0b1100010 ,  80  };
-
 void loop () {
   #if (ENABLE_HR)
-  umbrellaSysVars::hrCharacteristic->setValue(hrg , 2);
-  umbrellaSysVars::hrCharacteristic->notify(1);
-  #else
-  delay(60);
+  pulseOx.update();
   #endif
+
+
+
   digitalWrite( LED_RED , 1);
   delay(50);
   digitalWrite(LED_RED , 0);
   delay(4000);
+
 }
