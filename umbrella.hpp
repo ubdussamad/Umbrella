@@ -28,13 +28,16 @@
 #include "Gsr.hpp"
 #endif
 
-#if (ENABLE_HR)
+#if (ENABLE_HR || ENABLE_OLED || ENABLE_GYRO)
 #include <Wire.h>
+#endif
+
+#if (ENABLE_HR)
+#pragma once
 #include "MAX30100_PulseOximeter.h"
 #endif
 
 #if (ENABLE_OLED)
-#include <Wire.h>
 #if (!COMPILING)
 #define U8X8_USE_PINS
 #endif
@@ -51,6 +54,7 @@
 
 #define POX_SERVICE_UUID                       "1822" // SiG Standard, PulseOximeter Service UUID
 #define POX_CHARACTERISTIC_UUID                "2A5F" // SiG Standard, PulseOximeter Characteristic UUID
+#define POX_PLX_FEATURES                       "2A60" // SiG standard, PluseOx PLC fetures
 
 #define BODY_TEMP_SERVICE_UUID                 "1809" // SiG Standard , Health Thermometer Service
 #define BODY_TEMP_CHARACTERISTIC_UUID          "2A1C" // SiG Standard , Health Thermometer Charac..
@@ -116,6 +120,9 @@ FLAGS (8BIT)   , Heart Rate(8BIT), Energy Exp(16BIT), RR (16BIT)
 #define FLASH_BTN     0
 #define ADC_VOLTAGE   3.3
 
+/* Block for OTHER macros */
+#define uS_TO_S_FACTOR 1000000ULL  /* Conversion factor for micro seconds to seconds */ 
+
 
 /* Constructor Block for diffrent peripherals.  */
 #if (ENABLE_GSR)
@@ -129,28 +136,63 @@ PulseOximeter pulseOx;
 #endif
 
 
+
+
 /* Namespace Contaning System-Wide Vars  */
 namespace uSysVars {
 
 /* System wide counter. */
+#if (ENABLE_SLEEPING)
 RTC_DATA_ATTR int bootCount(0); // Counts the number of bootups.
+#endif
 long int sysNotifyCounter(0); // TODO: This might Persist even when the uP is in sleep
+short beatsCounter(0);
+uint16_t flashCounter(0);
 
 
 /* This block contains Global system event flags. */
 bool isConnected(false);
 bool hrInitFailed(false);
+bool freshRestart(true);
+bool pulseOxState(true);
 
 /* This block decalers global constructor handles for BLE characteristics/Services and Servers. */
-BLEServer         *umbrellaServer;
-BLECharacteristic *hrCharacteristic;
-BLECharacteristic *poxCharacteristic;
-BLECharacteristic *gsrCharacteristic;
-BLECharacteristic *tempCharacteristic;
-BLECharacteristic *gyroCharacteristic;
+BLEServer           *umbrellaServer;
+// uConnectionCallback *svCb;
+BLECharacteristic   *hrCharacteristic;
+BLECharacteristic   *poxCharacteristic;
+BLECharacteristic   *gsrCharacteristic;
+BLECharacteristic   *tempCharacteristic;
+BLECharacteristic   *gyroCharacteristic;
 
 }
 
+class uConnectionCallback : public BLEServerCallbacks {
+  void onConnect(BLEServer* pServer) {
+    LOG("Device Connected!");
+    uSysVars::isConnected = true;
+    short counter = 3;
+    while ( counter-- ) {
+    delay(80);
+    digitalWrite(LED_RED , HIGH);
+    delay(100);
+    digitalWrite(LED_RED , LOW);
+    }
+      
+  }
+
+  void onDisconnect ( BLEServer Server ) {
+      uSysVars::isConnected = false;
+      LOG("Device Disconnected.!");
+      short counter = 3;
+      while ( counter-- ) {
+        delay(80);
+        digitalWrite(LED_RED , HIGH);
+        delay(100);
+        digitalWrite(LED_RED , LOW);
+      }
+  }
+};
 
 #if (ENABLE_HR)
 /**
@@ -159,6 +201,12 @@ BLECharacteristic *gyroCharacteristic;
  * will call all the other sensors to collect data and notify.
  * Finally, the whole chip will be shutdown and woken up after
  * a set interval from start.
+ * 
+ * There is an ISSUE that if the heart rate sensor is disabled
+ * the whole system won't notify since everything depends on
+ * the beat detected callback.
+ * 
+ * This issue should be fixed.
  */
 void onBeatDetectedCb() { 
   /** TODO: This should trigger notify funcs for all services,
@@ -172,34 +220,87 @@ void onBeatDetectedCb() {
    * 
    * Also, trigger all the notify after a couple of beat detections maybe,
    * thus it'll have a callback counter which counts how many times the
-   * beat has been detected.
-   */      
-  LOG("Beat Detected. Rate is: ");
+   * beat has been detected. DONE!!
+   */
+
+  LOG("Beat Detected! CB Triggred.\n");
+
+  if (uSysVars::beatsCounter != BEATS_TO_COUNT_BEFORE_NOTIFYING) {
+    uSysVars::beatsCounter++;
+    LOG("Beat Halted, count: "+String(uSysVars::beatsCounter)+" times.\n");
+    return;
+  }
+  else if (!uSysVars::isConnected) {
+    /** If we have enough reading but nothing is connected
+     * to the device then dont turn the device off but wait
+     *  for something to connect.
+     * */
+    LOG("Beat Count is enough but device not connected!");
+    uSysVars::beatsCounter = BEATS_TO_COUNT_BEFORE_NOTIFYING - 1;
+    return;
+  }
+  else {
+    uSysVars::beatsCounter = 0;
+    #if (ENABLE_SLEEPING)
+    ++uSysVars::bootCount; // Increment the boot count as we're going to sleep.
+    #endif
+  }
+
+
+  LOG("Beat Detected 4 times. Rate is: ");
   float hr = pulseOx.getHeartRate();
   uint8_t hrD[] = { 0b01100010, hr };
   LOG(hrD[1]);
-  int x = 0xe;
   uint8_t spo2 = pulseOx.getSpO2();
   uint8_t poxD[] = { 0b00000000, spo2 , hr };
 
   uSysVars::hrCharacteristic->setValue(hrD , 2);
-  uSysVars::hrCharacteristic->notify(1);
+  uSysVars::hrCharacteristic->notify();
 
-  uSysVars::poxCharacteristic->setValue(poxD,2);
-  uSysVars::poxCharacteristic->notify(1);
+  uSysVars::poxCharacteristic->setValue(poxD,3);
+  uSysVars::poxCharacteristic->notify();
 
   double gsrD = sensorGsr.get_value();
   /** After fetching value, the GSR sensor is automatically
    *  shutdown by its handler class.
    */
   uSysVars::gsrCharacteristic->setValue(gsrD);
-  uSysVars::gsrCharacteristic->notify(1);
+  uSysVars::gsrCharacteristic->notify();
 
   pulseOx.shutdown(); // Shutting down the Pulse Oximeter after Reading data.
 
+  LOG("Waiting for things to cool down!");
+  delay(3000); // This delay is to let things cool down before shutting everything down.
 
+
+  #if (ENABLE_SLEEPING)
+  LOG("\n\n\n--------\n\nGoing to sleep!---------\n\n\n");
+  Serial.flush();
+  esp_deep_sleep_start();
+  #endif
 }
 #endif
+
+#if (ENABLE_SLEEPING_TOOLS)
+void print_wakeup_reason(){
+  esp_sleep_wakeup_cause_t wakeup_reason;
+
+  wakeup_reason = esp_sleep_get_wakeup_cause();
+
+  switch(wakeup_reason)
+  {
+    case ESP_SLEEP_WAKEUP_EXT0 : LOG("Wakeup caused by external signal using RTC_IO"); break;
+    case ESP_SLEEP_WAKEUP_EXT1 : LOG("Wakeup caused by external signal using RTC_CNTL"); break;
+    case ESP_SLEEP_WAKEUP_TIMER : LOG("Wakeup caused by timer"); break;
+    case ESP_SLEEP_WAKEUP_TOUCHPAD : LOG("Wakeup caused by touchpad"); break;
+    case ESP_SLEEP_WAKEUP_ULP : LOG("Wakeup caused by ULP program"); break;
+    default : Serial.printf("Wakeup was not caused by deep sleep: %d\n",wakeup_reason); break;
+  }
+}
+#endif
+
+
+
 
 
 #if (ENABLE_GSR)
@@ -207,8 +308,8 @@ class gsrCharCB : public BLECharacteristicCallbacks {
   void onRead(BLECharacteristic* pCharacteristic) {
     double value = sensorGsr.get_value();
     #ifdef GSR_LOGGING
-    Serial.print("Gsr Value is:");
-    Serial.println(value);
+    LOG("Gsr Value is:");
+    LOG(value);
     #endif
     pCharacteristic->setValue(value);
     return;
@@ -216,28 +317,6 @@ class gsrCharCB : public BLECharacteristicCallbacks {
 };
 #endif
 
-class ConnectionCallback : public BLEServerCallbacks {
-  void onConnect ( BLEServer Server ) {
-      uSysVars::isConnected = true;
-      short counter = 3;
-      while ( counter-- ) {
-      delay(80);
-      digitalWrite(LED_RED , HIGH);
-      delay(100);
-      digitalWrite(LED_RED , LOW);
-      }
-  }
 
-  void onDisconnect ( BLEServer Server ) {
-      uSysVars::isConnected = false;
-      short counter = 3;
-      while ( counter-- ) {
-        delay(80);
-        digitalWrite(LED_RED , HIGH);
-        delay(100);
-        digitalWrite(LED_RED , LOW);
-      }
-  }
-};
 
 #endif  // UMBRELLA_H

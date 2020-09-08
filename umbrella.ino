@@ -11,15 +11,20 @@
 
 
 /* Block for enabling different types of perpherals. */
-#define COMPILING    0
-#define ENABLE_GSR   1
-#define ENABLE_OLED  1
-#define ENABLE_HR    1
-#define ENABLE_GYRO  0
+#define COMPILING                   1
+#define ENABLE_GSR                  1
+#define ENABLE_OLED                 0
+#define ENABLE_HR                   1
+#define ENABLE_GYRO                 0
+#define ENABLE_SLEEPING             1
+#define ENABLE_SLEEPING_TOOLS       0
 #define LOG Serial.println
 
 /* Timeout Macros Block */
 #define DATA_NOTIFY_DELAY 60000
+#define BEATS_TO_COUNT_BEFORE_NOTIFYING 10
+#define TIME_TO_SLEEP  20        /* Time ESP32 will go to sleep (in seconds) */
+#define FLASH_COUNTER_TRIGGER 5455 // 1364counts = ~1second
 
 
 #include "umbrella.hpp"
@@ -45,16 +50,24 @@ void setup () {
   sensorGsr.set_adc_voltage(3.3000);
   #endif
 
+  #if (ENABLE_SLEEPING)
+  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+  if (uSysVars::bootCount > 0) {
+    uSysVars::freshRestart = false;
+    Serial.println("\n\n-----\n\nWaking up count: "+String(uSysVars::bootCount)+"\n----\n\n\n");
+  }
+  #endif
 
 
   BLEDevice::init("Umbrella");
   LOG("Initialized the device.");
   uSysVars::umbrellaServer = BLEDevice::createServer();
-  uSysVars::umbrellaServer->setCallbacks(new ConnectionCallback);
+  auto svCb = new uConnectionCallback();
+  uSysVars::umbrellaServer->setCallbacks(svCb);
   LOG("Initialized the Server.");
 
 
-  #if (ENABLE_HR)
+  #if (ENABLE_HR) // This block contains the BLE setup for P-Ox as well.
   uSysVars::hrInitFailed = !pulseOx.begin();
   if (uSysVars::hrInitFailed) {
         LOG("ERROR: Failed to initialize pulse oximeter");
@@ -64,15 +77,22 @@ void setup () {
   BLEService *hrService = uSysVars::umbrellaServer->createService( HR_SERVICE_UUID );
   uSysVars::hrCharacteristic = hrService->createCharacteristic(HR_CHARACTERISTIC_UUID, BLE_NOTIFY);
   BLEDescriptor* d2902 = new BLE2902();
-  uint8_t descHex[2] = {0b1111,0b1111}; // NU,NU,NU,NU,NU,NU, Indication bit, Notification bit.
+  uint8_t descHex[2] = {0x00,0x03}; // NU,NU,NU,NU,NU,NU, Indication bit, Notification bit.
   d2902->setValue(descHex,2);
   uSysVars::hrCharacteristic->addDescriptor(d2902);
   BLECharacteristic *hrCpCharacteristic = hrService->createCharacteristic(HR_CP_CHARACTERISTIC_UUID, BLE_NOTIFY);
   hrService->start();
 
   BLEService *poxService = uSysVars::umbrellaServer->createService( POX_SERVICE_UUID );
-  uSysVars::poxCharacteristic = poxService->createCharacteristic(POX_CHARACTERISTIC_UUID, BLE_NOTIFY | BLE_READ);
-  uSysVars::poxCharacteristic->addDescriptor(d2902);
+  uSysVars::poxCharacteristic = poxService->createCharacteristic(POX_CHARACTERISTIC_UUID,BLE_NOTIFY|BLE_INDICATE);
+  BLEDescriptor* d2902_pox = new BLE2902();
+  descHex[1] = 0x03; // NU,NU,NU,NU,NU,NU, Indication bit, Notification bit.
+  d2902_pox->setValue(descHex,2);
+  uSysVars::poxCharacteristic->addDescriptor(d2902_pox);
+
+  BLECharacteristic *poxPlxFeatures = poxService->createCharacteristic(POX_PLX_FEATURES,BLE_NOTIFY|BLE_READ);
+  uint8_t pox_plxD[] = {0x00,0x00};
+  poxPlxFeatures->setValue(pox_plxD , 2);  
   poxService->start();
   }
 
@@ -80,8 +100,11 @@ void setup () {
   
   #if (ENABLE_GSR)
   BLEService *gsrService = uSysVars::umbrellaServer->createService( GSR_SENSOR_SERVICE_UUID );
-  uSysVars::gsrCharacteristic = gsrService->createCharacteristic(GSR_SENSOR_CHARACTERISTIC_UUID, BLE_READ);
-  uSysVars::gsrCharacteristic->addDescriptor(new BLE2902);
+  uSysVars::gsrCharacteristic = gsrService->createCharacteristic(GSR_SENSOR_CHARACTERISTIC_UUID, 1U | 4U);
+  BLEDescriptor* d2902 = new BLE2902();
+  uint8_t descHex[2] = {0x00,0x03}; // NU,NU,NU,NU,NU,NU, Indication bit, Notification bit.
+  d2902->setValue(descHex,2);
+  uSysVars::gsrCharacteristic->addDescriptor(d2902);
   uSysVars::gsrCharacteristic->setCallbacks( new gsrCharCB );
   gsrService->start();
   #endif
@@ -109,14 +132,33 @@ void setup () {
 
 void loop () {
   #if (ENABLE_HR)
-  pulseOx.update();
+  if (uSysVars::isConnected) {
+    if (!uSysVars::pulseOxState) { 
+      pulseOx.resume();
+      uSysVars::pulseOxState = true;
+      LOG("Pulse Ox Now turned on!");
+    }
+    pulseOx.update(); // This will eventually call the BeatDetected Callback
+  }
+  else {
+    if (uSysVars::pulseOxState) {
+      pulseOx.shutdown();
+      LOG("Pulse Ox has been switched off as there is no connection.");
+      uSysVars::pulseOxState = false;
+    }
+
+  }
   #endif
 
+  uSysVars::flashCounter++;
 
 
+  if (uSysVars::flashCounter == FLASH_COUNTER_TRIGGER) {
   digitalWrite( LED_RED , 1);
   delay(50);
   digitalWrite(LED_RED , 0);
-  delay(4000);
+  uSysVars::flashCounter = 0;
+  }
+  
 
 }

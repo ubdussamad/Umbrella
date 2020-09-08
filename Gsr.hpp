@@ -40,8 +40,8 @@ public:
     void set_adc_resolution (const int& value );
     void set_sample_delay ( const short& value);
     void set_adc_voltage ( const double& value);
-    virtual void voltageOfsetCorrection (double deltaV);
-    virtual double getVoffCorrectedvalue(void);
+    // virtual void voltageOfsetCorrection (double deltaV);
+    // virtual double getVoffCorrectedvalue(void);
 };
 
 #endif
