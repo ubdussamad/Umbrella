@@ -37,7 +37,8 @@
 #include "MAX30100_PulseOximeter.h"
 #endif
 
-#if (ENABLE_OLED)
+#if (ENABLE_OLED_)
+#include <Arduino.h>
 #if (!COMPILING)
 #define U8X8_USE_PINS
 #endif
@@ -121,14 +122,29 @@ FLAGS (8BIT)   , Heart Rate(8BIT), Energy Exp(16BIT), RR (16BIT)
 #define ADC_VOLTAGE   3.3
 
 /* Block for OTHER macros */
-#define uS_TO_S_FACTOR 1000000ULL  /* Conversion factor for micro seconds to seconds */ 
+#define uS_TO_S_FACTOR 1000000ULL  /* Conversion factor for micro seconds to seconds */
+#define ULOGO_WIDTH  30
+#define ULOGO_HEIGHT 30
+
+/*Block contaning graphics. */
+static unsigned char uLogo[] PROGMEM = {
+   0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0x3f, 0x00, 0x80, 0x03, 0x30, 0x00,
+   0x80, 0x07, 0x78, 0x00, 0xc0, 0x07, 0xf8, 0x00, 0xe0, 0x07, 0xfc, 0x01,
+   0xf0, 0x0f, 0xfc, 0x03, 0xfc, 0x0f, 0xfc, 0x07, 0xfe, 0x1f, 0xfe, 0x1f,
+   0xfe, 0x1f, 0xfe, 0x1f, 0xfa, 0x3f, 0xff, 0x17, 0xc2, 0x3f, 0xff, 0x10,
+   0x02, 0x3f, 0x3f, 0x10, 0x02, 0xfc, 0x0f, 0x10, 0x02, 0xe0, 0x01, 0x10,
+   0x02, 0xe0, 0x01, 0x10, 0x02, 0xf8, 0x07, 0x10, 0x02, 0x3f, 0x3f, 0x10,
+   0xc2, 0x3f, 0xff, 0x11, 0xfa, 0x3f, 0xff, 0x17, 0xfe, 0x1f, 0xfe, 0x1f,
+   0xfe, 0x1f, 0xfe, 0x1f, 0xf8, 0x0f, 0xfc, 0x07, 0xf0, 0x0f, 0xfc, 0x03,
+   0xe0, 0x07, 0xfc, 0x01, 0xc0, 0x07, 0xf8, 0x00, 0x80, 0x07, 0x78, 0x00,
+   0x80, 0x03, 0x30, 0x00, 0x00, 0xff, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 
 /* Constructor Block for diffrent peripherals.  */
 #if (ENABLE_GSR)
 auto sensorGsr =  gsr(ADC0_CH1 , ADC_VOLTAGE , GSR_PWR );
 #endif
-#if (ENABLE_OLED)
+#if (ENABLE_OLED_)
 U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2 ( U8G2_R2 , U8X8_PIN_NONE, I2C_SCL , I2C_SDA );
 #endif
 #if (ENABLE_HR)
@@ -149,6 +165,9 @@ long int sysNotifyCounter(0); // TODO: This might Persist even when the uP is in
 short beatsCounter(0);
 #if (ENABLE_BLINKING)
 uint64_t flashCounter(0);
+#endif
+#if (ENABLE_CONNECTION_TIMEOUT_SLEEP)
+uint32_t connCtr(0);
 #endif
 
 
@@ -172,6 +191,14 @@ BLECharacteristic   *gyroCharacteristic;
 class uConnectionCallback : public BLEServerCallbacks {
   void onConnect(BLEServer* pServer) {
     LOG("Device Connected!");
+
+    #if (ENABLE_OLED)
+    delay(5);
+    u8g2.clearBuffer();
+    u8g2.drawStr(20,20,"Connected.");   // write something to the internal memory.
+    u8g2.sendBuffer();
+    delay(5);
+    #endif
     uSysVars::isConnected = true;
     short counter = 3;
     while ( counter-- ) {
@@ -186,6 +213,13 @@ class uConnectionCallback : public BLEServerCallbacks {
   void onDisconnect ( BLEServer Server ) {
       uSysVars::isConnected = false;
       LOG("Device Disconnected.!");
+      #if (ENABLE_OLED)
+      delay(5);
+      u8g2.clearBuffer();
+      u8g2.drawStr(10,20,"Disconnected.");   // write something to the internal memory.
+      u8g2.sendBuffer();
+      delay(5);
+      #endif
       short counter = 3;
       while ( counter-- ) {
         delay(80);
@@ -196,7 +230,7 @@ class uConnectionCallback : public BLEServerCallbacks {
   }
 };
 
-#if (1)//ENABLE_HR)
+#if (ENABLE_HR)
 /**
  * @brief This is a method which will be called when the
  * PulseOximeter detects a heart beat, this routine
@@ -252,36 +286,35 @@ void onBeatDetectedCb() {
   LOG("Beat Detected 4 times. Rate is: ");
   float hr = pulseOx.getHeartRate();
   uint8_t hrD[] = { 0b01100010, hr };
-  LOG(hrD[1]);
   uint8_t spo2 = pulseOx.getSpO2();
   uint8_t poxD[] = { 0b00000000, spo2 , hr };
-
   uSysVars::hrCharacteristic->setValue(hrD , 2);
-  LOG("CAlling HR notify!");
   uSysVars::hrCharacteristic->notify();
-  delay(80);
-
+  delay(5);
   uSysVars::poxCharacteristic->setValue(poxD,3);
-  LOG("CAlling POX notify!");
   uSysVars::poxCharacteristic->notify();
-  delay(80);
-
+  delay(5);
   double gsrD = sensorGsr.get_value();
-  /** After fetching value, the GSR sensor is automatically
-   *  shutdown by its handler class.
-   */
   uSysVars::gsrCharacteristic->setValue(gsrD);
-  LOG("CAlling GSR notify!");
   uSysVars::gsrCharacteristic->notify();
-  delay(80);
-
+  delay(5);
   pulseOx.shutdown(); // Shutting down the Pulse Oximeter after Reading data.
 
-  LOG("Waiting for things to cool down!");
+  LOG("Logging..");
+  #if (ENABLE_OLED)
+  u8g2.clearBuffer();
+  u8g2.drawStr(20,20,"Notif Sent.");   // write something to the internal memory.
+  u8g2.sendBuffer();
+  #endif
   delay(3000); // This delay is to let things cool down before shutting everything down.
 
 
   #if (ENABLE_SLEEPING)
+  #if (ENABLE_OLED)
+  u8g2.clearBuffer();
+  u8g2.drawStr(20,20,"Sleeping...");   // write something to the internal memory.
+  u8g2.sendBuffer();
+  #endif
   LOG("\n\n\n--------\n\nGoing to sleep!---------\n\n\n");
   Serial.flush();
   esp_deep_sleep_start();
@@ -306,9 +339,6 @@ void print_wakeup_reason(){
   }
 }
 #endif
-
-
-
 
 
 #if (ENABLE_GSR)
