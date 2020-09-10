@@ -18,11 +18,12 @@
 #define ENABLE_GYRO                 0
 #define ENABLE_SLEEPING             1
 #define ENABLE_SLEEPING_TOOLS       0
+#define ENABLE_BLINKING             1
 #define LOG Serial.println
 
 /* Timeout Macros Block */
 #define DATA_NOTIFY_DELAY 60000
-#define BEATS_TO_COUNT_BEFORE_NOTIFYING 10
+#define BEATS_TO_COUNT_BEFORE_NOTIFYING 15
 #define TIME_TO_SLEEP  20        /* Time ESP32 will go to sleep (in seconds) */
 #define FLASH_COUNTER_TRIGGER 5455 // 1364counts = ~1second
 
@@ -77,16 +78,17 @@ void setup () {
   BLEService *hrService = uSysVars::umbrellaServer->createService( HR_SERVICE_UUID );
   uSysVars::hrCharacteristic = hrService->createCharacteristic(HR_CHARACTERISTIC_UUID, BLE_NOTIFY);
   BLEDescriptor* d2902 = new BLE2902();
-  uint8_t descHex[2] = {0x00,0x03}; // NU,NU,NU,NU,NU,NU, Indication bit, Notification bit.
+  uint8_t descHex[2] = {0x01,0x00}; // NU,NU,NU,NU,NU,NU, Indication bit, Notification bit.
   d2902->setValue(descHex,2);
   uSysVars::hrCharacteristic->addDescriptor(d2902);
   BLECharacteristic *hrCpCharacteristic = hrService->createCharacteristic(HR_CP_CHARACTERISTIC_UUID, BLE_NOTIFY);
   hrService->start();
 
+  delay(30);
+
   BLEService *poxService = uSysVars::umbrellaServer->createService( POX_SERVICE_UUID );
   uSysVars::poxCharacteristic = poxService->createCharacteristic(POX_CHARACTERISTIC_UUID,BLE_NOTIFY|BLE_INDICATE);
   BLEDescriptor* d2902_pox = new BLE2902();
-  descHex[1] = 0x03; // NU,NU,NU,NU,NU,NU, Indication bit, Notification bit.
   d2902_pox->setValue(descHex,2);
   uSysVars::poxCharacteristic->addDescriptor(d2902_pox);
 
@@ -94,6 +96,8 @@ void setup () {
   uint8_t pox_plxD[] = {0x00,0x00};
   poxPlxFeatures->setValue(pox_plxD , 2);  
   poxService->start();
+
+  delay(30);
   }
 
   #endif
@@ -102,11 +106,12 @@ void setup () {
   BLEService *gsrService = uSysVars::umbrellaServer->createService( GSR_SENSOR_SERVICE_UUID );
   uSysVars::gsrCharacteristic = gsrService->createCharacteristic(GSR_SENSOR_CHARACTERISTIC_UUID, 1U | 4U);
   BLEDescriptor* d2902 = new BLE2902();
-  uint8_t descHex[2] = {0x00,0x03}; // NU,NU,NU,NU,NU,NU, Indication bit, Notification bit.
+  uint8_t descHex[2] = {0x01,0x00}; // NU,NU,NU,NU,NU,NU, Indication bit, Notification bit.
   d2902->setValue(descHex,2);
   uSysVars::gsrCharacteristic->addDescriptor(d2902);
   uSysVars::gsrCharacteristic->setCallbacks( new gsrCharCB );
   gsrService->start();
+  delay(30);
   #endif
 
   
@@ -114,7 +119,10 @@ void setup () {
 
   BLEAdvertising* pAdvertising = BLEDevice::getAdvertising();
   #if (ENABLE_HR)
-  if (!uSysVars::hrInitFailed) {pAdvertising->addServiceUUID(HR_SERVICE_UUID);}
+  if (!uSysVars::hrInitFailed) {
+    pAdvertising->addServiceUUID(HR_SERVICE_UUID);
+    pAdvertising->addServiceUUID(POX_SERVICE_UUID);
+  }
   #endif
   #if (ENABLE_GSR)
   pAdvertising->addServiceUUID(GSR_SENSOR_SERVICE_UUID);
@@ -145,20 +153,24 @@ void loop () {
       pulseOx.shutdown();
       LOG("Pulse Ox has been switched off as there is no connection.");
       uSysVars::pulseOxState = false;
+      #if (ENABLE_BLINKING)
+      delay(6);
+      #endif
     }
 
   }
   #endif
 
+
+  #if (ENABLE_BLINKING)
   uSysVars::flashCounter++;
-
-
   if (uSysVars::flashCounter == FLASH_COUNTER_TRIGGER) {
   digitalWrite( LED_RED , 1);
   delay(50);
   digitalWrite(LED_RED , 0);
   uSysVars::flashCounter = 0;
   }
+  #endif
   
 
 }

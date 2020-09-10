@@ -147,7 +147,9 @@ RTC_DATA_ATTR int bootCount(0); // Counts the number of bootups.
 #endif
 long int sysNotifyCounter(0); // TODO: This might Persist even when the uP is in sleep
 short beatsCounter(0);
-uint16_t flashCounter(0);
+#if (ENABLE_BLINKING)
+uint64_t flashCounter(0);
+#endif
 
 
 /* This block contains Global system event flags. */
@@ -194,7 +196,7 @@ class uConnectionCallback : public BLEServerCallbacks {
   }
 };
 
-#if (ENABLE_HR)
+#if (1)//ENABLE_HR)
 /**
  * @brief This is a method which will be called when the
  * PulseOximeter detects a heart beat, this routine
@@ -255,17 +257,23 @@ void onBeatDetectedCb() {
   uint8_t poxD[] = { 0b00000000, spo2 , hr };
 
   uSysVars::hrCharacteristic->setValue(hrD , 2);
+  LOG("CAlling HR notify!");
   uSysVars::hrCharacteristic->notify();
+  delay(80);
 
   uSysVars::poxCharacteristic->setValue(poxD,3);
+  LOG("CAlling POX notify!");
   uSysVars::poxCharacteristic->notify();
+  delay(80);
 
   double gsrD = sensorGsr.get_value();
   /** After fetching value, the GSR sensor is automatically
    *  shutdown by its handler class.
    */
   uSysVars::gsrCharacteristic->setValue(gsrD);
+  LOG("CAlling GSR notify!");
   uSysVars::gsrCharacteristic->notify();
+  delay(80);
 
   pulseOx.shutdown(); // Shutting down the Pulse Oximeter after Reading data.
 
