@@ -69,7 +69,7 @@ All the values of characteristic(s) which are defined
 by SiG are in the order of LSO to MSO.
 Where LSO = Least Significant Octet and MSO = Most Significant Octet. 
 
-For Example if a value having a width greater than 1byte (8bit)
+For Example, a value having a width greater than 1byte (8bit)
 will be represented as follows:
 
 Lets say we have a Heart rate Charateristic value in the order:
@@ -82,17 +82,17 @@ Lets Assume some values according to their sizes:
  11000010    , 01010000        , 0000000000010001 , 0010110100001000     | Binary Values
  C2          , 50              , 0011             , 2d08                 | Hex Values
 
-Now Since we could only send an 8bit unisgned int (1Bytes) array,
-we have to split a 16bit(2bytes) octet into 2 Consecutive octets in an array.
+Now Since we could only send an 8bit(1Byte or an octet) unisgned int array,
+we have to split a 16bit(2bytes)  into 2 Consecutive octets in an array.
 
 For example, say we have 8fe2 we represent it in an array as {8f,e2}.
 This way of represnting the larger octet (8f) first and the smaller octet
 last is called Big Endian Order (MSO to LSO)
 
-But, In case of BLE standard we send it in the Big-Endian order (LSO to MSO).
+But, In case of BLE standard we send it in the Little-Endian order (LSO to MSO).
 So, we represent the hex number 8fe2 as {e2, 8f}.
 
-Thus the array we send for out heart rate characteristic data will look like:
+Thus, the array we send for our heart rate characteristic data will look like:
 
 FLAGS (8BIT)   , Heart Rate(8BIT), Energy Exp(16BIT), RR (16BIT)
  { C2          , 50              , 11,   00         , 08,    2d }
