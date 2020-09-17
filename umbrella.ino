@@ -14,7 +14,6 @@
 #define COMPILING                         1
 #define ENABLE_GSR                        1
 #define ENABLE_OLED                       0
-#define ENABLE_OLED_                      1
 #define ENABLE_HR                         1
 #define ENABLE_GYRO                       0
 #define ENABLE_SLEEPING                   1
@@ -39,19 +38,12 @@ void setup () {
 
   Serial.println("Initializing.");
 
-  #if (ENABLE_OLED_)
-  u8g2.begin();
-  u8g2.clearBuffer();                // Clear the internal memory.
-  u8g2.drawXBMP( 38 , 0, ULOGO_WIDTH, ULOGO_HEIGHT, uLogo );
-  // 8g2.drawStr(20,20,"UMBRELLA");  // write something to the internal memory.
-  u8g2.sendBuffer();
-  #endif
-
   pinMode( LED_BLUE, OUTPUT);
   pinMode( LED_RED , OUTPUT);
   pinMode( I2C_SDA , OUTPUT);
   pinMode( I2C_SCL , OUTPUT);
   pinMode( FLASH_BTN, INPUT);
+
 
 
   #if (ENABLE_GSR)
@@ -112,7 +104,6 @@ void setup () {
   poxService->start();
 
   delay(30);
-  u8g2.clearBuffer();
   }
 
   #endif
@@ -147,15 +138,8 @@ void setup () {
   BLEDevice::startAdvertising();
   Serial.println("Device Initialization Complete.");
 
-  #if (ENABLE_OLED_)
-  delay(1000);
-  u8g2.setFont(u8g2_font_10x20_tf); //u8g2_font_12x10_tf); // Choose a suitable font.
-  u8g2.clearBuffer();
-  u8g2.drawStr(10,20,"BLE ACTIVATED.");   // write something to the internal memory.
-  u8g2.sendBuffer();
-  delay(1000);
-  #endif
 }
+
 
 
 void loop () {
@@ -164,14 +148,6 @@ void loop () {
     if (!uSysVars::pulseOxState) { 
       pulseOx.resume();
       uSysVars::pulseOxState = true;
-      LOG("Pulse Ox Now turned on!");
-      #if (ENABLE_OLED)
-      delay(300);
-      u8g2.clearBuffer();
-      u8g2.drawStr(20,20,"POX ON.");   // write something to the internal memory.
-      u8g2.sendBuffer();
-      #endif
-
     }
     pulseOx.update(); // This will eventually call the BeatDetected Callback
   }
@@ -179,12 +155,6 @@ void loop () {
     if (uSysVars::pulseOxState) {
       pulseOx.shutdown();
       LOG("Pulse Ox has been switched off as there is no connection.");
-      #if (ENABLE_OLED)
-      delay(100);
-      u8g2.clearBuffer();
-      u8g2.drawStr(20,20,"POX OFF.");   // write something to the internal memory.
-      u8g2.sendBuffer();
-      #endif
       uSysVars::pulseOxState = false;
     }
       #if (ENABLE_BLINKING)
@@ -206,11 +176,6 @@ void loop () {
        */
       if (uSysVars::connCtr == CONN_TIMEOUT) {
       LOG("Going to sleep since there is no connection.");
-      #if (ENABLE_OLED)
-      u8g2.clearBuffer();
-      u8g2.drawStr(20,20,"Sleeping..");   // write something to the internal memory.
-      u8g2.sendBuffer();
-      #endif
       Serial.flush();
       uSysVars::connCtr = 0;
       esp_deep_sleep_start();
@@ -229,18 +194,8 @@ void loop () {
   delay(50);
   digitalWrite(LED_RED , 0);
   uSysVars::flashCounter = 0;
-  #if (ENABLE_OLED)
-  /**
-   * This clears the screen buffer to save power
-   * every 4 secs or so.
-   * Thus the screen can at best be on for a maximum
-   * of 4 seconds.
-   */
-  u8g2.clearBuffer();
-  u8g2.sendBuffer();
   #endif
   }
-  #endif
   
 
 }

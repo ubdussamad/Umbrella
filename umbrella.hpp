@@ -144,7 +144,7 @@ static unsigned char uLogo[] PROGMEM = {
 #if (ENABLE_GSR)
 auto sensorGsr =  gsr(ADC0_CH1 , ADC_VOLTAGE , GSR_PWR );
 #endif
-#if (ENABLE_OLED_)
+#if (ENABLE_OLED)
 U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2 ( U8G2_R2 , U8X8_PIN_NONE, I2C_SCL , I2C_SDA );
 #endif
 #if (ENABLE_HR)
@@ -163,6 +163,7 @@ RTC_DATA_ATTR int bootCount(0); // Counts the number of bootups.
 #endif
 long int sysNotifyCounter(0); // TODO: This might Persist even when the uP is in sleep
 short beatsCounter(0);
+float bpmMeasure(0);
 #if (ENABLE_BLINKING)
 uint64_t flashCounter(0);
 #endif
@@ -263,6 +264,7 @@ void onBeatDetectedCb() {
 
   if (uSysVars::beatsCounter != BEATS_TO_COUNT_BEFORE_NOTIFYING) {
     uSysVars::beatsCounter++;
+    uSysVars::bpmMeasure += pulseOx.getHeartRate();
     LOG("Beat Halted, count: "+String(uSysVars::beatsCounter)+" times.\n");
     return;
   }
@@ -284,10 +286,10 @@ void onBeatDetectedCb() {
 
 
   LOG("Beat Detected 4 times. Rate is: ");
-  float hr = pulseOx.getHeartRate();
-  uint8_t hrD[] = { 0b01100010, hr };
+  uSysVars::bpmMeasure /= BEATS_TO_COUNT_BEFORE_NOTIFYING - 1;
+  uint8_t hrD[] = { 0b01100010, uSysVars::bpmMeasure };
   uint8_t spo2 = pulseOx.getSpO2();
-  uint8_t poxD[] = { 0b00000000, spo2 , hr };
+  uint8_t poxD[] = { 0b00000000, spo2 , uSysVars::bpmMeasure };
   uSysVars::hrCharacteristic->setValue(hrD , 2);
   uSysVars::hrCharacteristic->notify();
   delay(5);
@@ -301,20 +303,10 @@ void onBeatDetectedCb() {
   pulseOx.shutdown(); // Shutting down the Pulse Oximeter after Reading data.
 
   LOG("Logging..");
-  #if (ENABLE_OLED)
-  u8g2.clearBuffer();
-  u8g2.drawStr(20,20,"Notif Sent.");   // write something to the internal memory.
-  u8g2.sendBuffer();
-  #endif
   delay(3000); // This delay is to let things cool down before shutting everything down.
 
 
   #if (ENABLE_SLEEPING)
-  #if (ENABLE_OLED)
-  u8g2.clearBuffer();
-  u8g2.drawStr(20,20,"Sleeping...");   // write something to the internal memory.
-  u8g2.sendBuffer();
-  #endif
   LOG("\n\n\n--------\n\nGoing to sleep!---------\n\n\n");
   Serial.flush();
   esp_deep_sleep_start();
