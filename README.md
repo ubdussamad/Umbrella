@@ -5,6 +5,8 @@ Part of an on going reasearch project.
 This devices includes, GSR, Pulse Oximeter and few other sensors.
 The data genrated can be analysed for research purposes.
 
+![Front view of the biosensor device.](https://github.com/ubdussamad/Umbrella/raw/master/data/photo.jpeg "Second Version")
+
 
 # Hardware
 The hardware files are available in the hardware folder,
