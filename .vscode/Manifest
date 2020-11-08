@@ -1,0 +1,14 @@
+Entry #1:
+    V-1.0 REF 20JUN2020 (Max 30100)
+    -> Groove GSR
+    -> Max 30100
+    -> MPU 6050
+
+Entry #2:
+    V-1.5 REF 08NOV2020
+    -> Change Log:
+        -> Updated the Pulse Oximeter, now using MAX30101.
+        -> The sensor itself has it's own processing so minimal code is required.
+        -> Changing the whole codebase to accomodate new sensor.
+        -> Going to improve control flow and will try fixing memmory issues beacuse of the OLED library.
+        -> Every other sensor stays the same in this change.

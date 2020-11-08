@@ -13,11 +13,11 @@
                 "/home/samad/Arduino/libraries/Arduino-MAX30100-master/src",
                 "/home/samad/Downloads/arduino-1.8.13/hardware/arduino/avr/**",
                 "/home/samad/Downloads/arduino-1.8.13/tools/**",
-                "/usr/include/x86_64-linux-gnu/c++/5/bits",
                 "/home/samad/Arduino/libraries/**",
                 "/home/samad/Arduino/libraries/U8g2/src/",
                 "/home/samad/Arduino/libraries/U8g2/src/clib",
-                "/home/samad/Downloads/arduino-1.8.13/hardware/tools/avr/avr/include/**"
+                "/home/samad/Downloads/arduino-1.8.13/hardware/tools/avr/avr/include/**",
+                "/home/samad/Arduino/libraries/SparkFun_Bio_Sensor_Hub_Library-master/src/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

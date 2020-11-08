@@ -28,7 +28,6 @@
 #define FLASH_COUNTER_TRIGGER 5455 // 1364counts = ~1second
 #define CONN_TIMEOUT 999999L
 
-
 #include "umbrella.hpp"
 
 

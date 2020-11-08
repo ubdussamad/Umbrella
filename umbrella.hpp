@@ -2,7 +2,7 @@
     File: umbrella.hpp
     Parent Suite Header for Umbrella Firmware.
     Part of Project Umbrella
-    V-1.0 REF 20JUN2020
+    V-1.5 REF 08NOV2020
     Author: Ubdussamad <ubdussamad@gmail.com>
     This Piece of Software is NOT for public sharing.
     Copyright (c) 2020, ubdussamad@gmail.com
@@ -34,7 +34,8 @@
 
 #if (ENABLE_HR)
 #pragma once
-#include "MAX30100_PulseOximeter.h"
+// Pulse Oximeter Driver Headers
+#include <SparkFun_Bio_Sensor_Hub_Library.h>
 #endif
 
 #if (ENABLE_OLED_)
@@ -112,14 +113,16 @@ FLAGS (8BIT)   , Heart Rate(8BIT), Energy Exp(16BIT), RR (16BIT)
 
 
 /* Block for mapping pinout to relevant macros.*/
-#define ADC0_CH1      36
-#define GSR_PWR       18
-#define LED_RED       32
-#define LED_BLUE      33 /* Not functional due to Hardware Reasons */
-#define I2C_SDA       21
-#define I2C_SCL       22
-#define FLASH_BTN     0
-#define ADC_VOLTAGE   3.3
+#define ADC0_CH1        36
+#define GSR_PWR         18
+#define LED_RED         32
+#define LED_BLUE        33 /* Not functional due to Hardware Reasons */
+#define I2C_SDA         21
+#define I2C_SCL         22
+#define FLASH_BTN       0
+#define ADC_VOLTAGE     3.3
+#define RESET_PIN_POX   4 /* Should be Change. */
+#define MFIO_PIN_POX    5 /* Should be Change. */
 
 /* Block for OTHER macros */
 #define uS_TO_S_FACTOR 1000000ULL  /* Conversion factor for micro seconds to seconds */
@@ -148,7 +151,8 @@ auto sensorGsr =  gsr(ADC0_CH1 , ADC_VOLTAGE , GSR_PWR );
 U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2 ( U8G2_R2 , U8X8_PIN_NONE, I2C_SCL , I2C_SDA );
 #endif
 #if (ENABLE_HR)
-PulseOximeter pulseOx;
+// Takes address, reset pin, and MFIO pin.
+SparkFun_Bio_Sensor_Hub bioHub(RESET_PIN_POX, MFIO_PIN_POX); 
 #endif
 
 
@@ -162,13 +166,27 @@ namespace uSysVars {
 RTC_DATA_ATTR int bootCount(0); // Counts the number of bootups.
 #endif
 long int sysNotifyCounter(0); // TODO: This might Persist even when the uP is in sleep
-short beatsCounter(0);
-float bpmMeasure(0);
+
 #if (ENABLE_BLINKING)
 uint64_t flashCounter(0);
 #endif
 #if (ENABLE_CONNECTION_TIMEOUT_SLEEP)
 uint32_t connCtr(0);
+#endif
+
+#if (ENABLE_HR)
+/**
+ * UPDATE:
+ * V-1.5 REF 08NOV2020
+ * The beatsCounter will count the number of
+ * reported heart rate and spo2 insted of 
+ * counting the actualy beats in the previously
+ * used sensor.
+ */
+bioData body;
+
+int beatsCounter(0);
+int bpmMeasure(0); // This might be removed in the next update.
 #endif
 
 
@@ -244,6 +262,13 @@ class uConnectionCallback : public BLEServerCallbacks {
  * the beat detected callback.
  * 
  * This issue should be fixed.
+ * 
+ * Update (V-1.5 REF 08NOV2020)
+ * 
+ * The New MAX30101 Sensor with bio sensor hub might come with a similar
+ * callback feature thus this isn't removed yet, although the later
+ * stated issues are stil not fixed and should be worked on.
+ * 
  */
 void onBeatDetectedCb() { 
   /** TODO: This should trigger notify funcs for all services,
