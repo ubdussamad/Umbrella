@@ -1,13 +1,13 @@
-/*
-    File: Umbrella.ino
-    Parent Suite for Umbrella Firmware.
-    Part of Project Umbrella
-    V-1.0 REF 20JUN2020
-    Author: Ubdussamad <ubdussamad@gmail.com>
-    This Piece of Software is NOT for public sharing.
-    Copyright (c) 2020, ubdussamad@gmail.com
-    All rights reserved.
-*/
+/**
+ * @file umbrella.ino
+ * @author your name (you@domain.com)
+ * @brief Parent Suite for Umbrella Firmware.
+ * Part of Project Umbrella
+ * @version V-1.5 REF 08NOV2020
+ * @date 2020-11-8
+ * @license This Piece of Software is NOT for public sharing.
+ * @copyright Copyright (c) 2020, ubdussamad@gmail.com
+ */
 
 
 /* Block for enabling different types of perpherals. */
@@ -30,7 +30,10 @@
 
 #include "umbrella.hpp"
 
-
+/**
+ * @brief Steup Block Containing Initializers.
+ * 
+ */
 void setup () {
 
   Serial.begin(115200);
@@ -70,39 +73,39 @@ void setup () {
 
 
   #if (ENABLE_HR) // This block contains the BLE setup for P-Ox as well.
-  uSysVars::hrInitFailed = !pulseOx.begin();
-  // auto RED = LEDCurrent::MAX30100_LED_CURR_50MA;
-  // auto IR = LEDCurrent::MAX30100_LED_CURR_50MA;
-  // pulseOx.setLedsCurrent(IR , RED);
+  
+  Wire.begin();
+  uSysVars::hrInitFailed = bioHub.begin();
 
   if (uSysVars::hrInitFailed) {
-        LOG("ERROR: Failed to initialize pulse oximeter");
+    LOG("ERROR: Failed to initialize pulse oximeter");
   }
   else {
-  pulseOx.setOnBeatDetectedCallback(onBeatDetectedCb); /* Callback if a beat is detected, notify the Client then. */
-  BLEService *hrService = uSysVars::umbrellaServer->createService( HR_SERVICE_UUID );
-  uSysVars::hrCharacteristic = hrService->createCharacteristic(HR_CHARACTERISTIC_UUID, BLE_NOTIFY);
-  BLEDescriptor* d2902 = new BLE2902();
-  uint8_t descHex[2] = {0x01,0x00}; // NU,NU,NU,NU,NU,NU, Indication bit, Notification bit.
-  d2902->setValue(descHex,2);
-  uSysVars::hrCharacteristic->addDescriptor(d2902);
-  BLECharacteristic *hrCpCharacteristic = hrService->createCharacteristic(HR_CP_CHARACTERISTIC_UUID, BLE_NOTIFY);
-  hrService->start();
 
-  delay(30);
+      int error = bioHub.configBpm(MODE_ONE); // Configuring just the BPM settings. 
+      if (error) {
+      }
 
-  BLEService *poxService = uSysVars::umbrellaServer->createService( POX_SERVICE_UUID );
-  uSysVars::poxCharacteristic = poxService->createCharacteristic(POX_CHARACTERISTIC_UUID,BLE_NOTIFY|BLE_INDICATE);
-  BLEDescriptor* d2902_pox = new BLE2902();
-  d2902_pox->setValue(descHex,2);
-  uSysVars::poxCharacteristic->addDescriptor(d2902_pox);
+    pulseOx.setOnBeatDetectedCallback(onBeatDetectedCb); /* Callback if a beat is detected, notify the Client then. */
 
-  BLECharacteristic *poxPlxFeatures = poxService->createCharacteristic(POX_PLX_FEATURES,BLE_NOTIFY|BLE_READ);
-  uint8_t pox_plxD[] = {0x00,0x00};
-  poxPlxFeatures->setValue(pox_plxD , 2);  
-  poxService->start();
 
-  delay(30);
+    BLEService *hrService = uSysVars::umbrellaServer->createService( HR_SERVICE_UUID );
+    uSysVars::hrCharacteristic = hrService->createCharacteristic(HR_CHARACTERISTIC_UUID, BLE_NOTIFY);
+    BLEDescriptor* d2902 = new BLE2902();
+    uint8_t descHex[2] = {0x01,0x00}; // NU,NU,NU,NU,NU,NU, Indication bit, Notification bit.
+    d2902->setValue(descHex,2);
+    uSysVars::hrCharacteristic->addDescriptor(d2902);
+    BLECharacteristic *hrCpCharacteristic = hrService->createCharacteristic(HR_CP_CHARACTERISTIC_UUID, BLE_NOTIFY);
+    hrService->start();
+    BLEService *poxService = uSysVars::umbrellaServer->createService( POX_SERVICE_UUID );
+    uSysVars::poxCharacteristic = poxService->createCharacteristic(POX_CHARACTERISTIC_UUID,BLE_NOTIFY|BLE_INDICATE);
+    BLEDescriptor* d2902_pox = new BLE2902();
+    d2902_pox->setValue(descHex,2);
+    uSysVars::poxCharacteristic->addDescriptor(d2902_pox);
+    BLECharacteristic *poxPlxFeatures = poxService->createCharacteristic(POX_PLX_FEATURES,BLE_NOTIFY|BLE_READ);
+    uint8_t pox_plxD[] = {0x00,0x00};
+    poxPlxFeatures->setValue(pox_plxD , 2);
+    poxService->start();
   }
 
   #endif

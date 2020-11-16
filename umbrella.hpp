@@ -121,8 +121,8 @@ FLAGS (8BIT)   , Heart Rate(8BIT), Energy Exp(16BIT), RR (16BIT)
 #define I2C_SCL         22
 #define FLASH_BTN       0
 #define ADC_VOLTAGE     3.3
-#define RESET_PIN_POX   4 /* Should be Change. */
-#define MFIO_PIN_POX    5 /* Should be Change. */
+#define RESET_PIN_POX   4 /* Should be Changed. */
+#define MFIO_PIN_POX    5 /* Should be Changed. */
 
 /* Block for OTHER macros */
 #define uS_TO_S_FACTOR 1000000ULL  /* Conversion factor for micro seconds to seconds */
@@ -140,7 +140,8 @@ static unsigned char uLogo[] PROGMEM = {
    0xc2, 0x3f, 0xff, 0x11, 0xfa, 0x3f, 0xff, 0x17, 0xfe, 0x1f, 0xfe, 0x1f,
    0xfe, 0x1f, 0xfe, 0x1f, 0xf8, 0x0f, 0xfc, 0x07, 0xf0, 0x0f, 0xfc, 0x03,
    0xe0, 0x07, 0xfc, 0x01, 0xc0, 0x07, 0xf8, 0x00, 0x80, 0x07, 0x78, 0x00,
-   0x80, 0x03, 0x30, 0x00, 0x00, 0xff, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00 };
+   0x80, 0x03, 0x30, 0x00, 0x00, 0xff, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00 
+   };
 
 
 /* Constructor Block for diffrent peripherals.  */
@@ -160,6 +161,16 @@ SparkFun_Bio_Sensor_Hub bioHub(RESET_PIN_POX, MFIO_PIN_POX);
 
 /* Namespace Contaning System-Wide Vars  */
 namespace uSysVars {
+
+/** UPDATE:
+ *  V-1.5 REF 08NOV2020
+ *  System Wide Error Reporting Variable.
+ *  If a designated bit is 1, it means thats there was an error.
+ *  MSB -> LSB
+ *  POX_ERROR_BIT, GSR_ERROR_BIT, GYRO_ERR_BIT, N/A, N/A, N/A, N/A, N/A
+uint8_t errorCode = 0b00000000;
+
+
 
 /* System wide counter. */
 #if (ENABLE_SLEEPING)
