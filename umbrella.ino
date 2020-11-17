@@ -1,6 +1,6 @@
 /**
  * @file umbrella.ino
- * @author your name (you@domain.com)
+ * @author ubdussamad (ubdussamad@gmail.com)
  * @brief Parent Suite for Umbrella Firmware.
  * Part of Project Umbrella
  * @version V-1.5 REF 08NOV2020
@@ -31,7 +31,7 @@
 #include "umbrella.hpp"
 
 /**
- * @brief Steup Block Containing Initializers.
+ * @brief Setup Block Containing Initializers.
  * 
  */
 void setup () {

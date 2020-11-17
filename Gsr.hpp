@@ -1,11 +1,13 @@
-/*
-* File: Gsr.h
-* Part of Project Umbrella
-* Header File for GSR Library
-* V-1.0 REF 20JUN2020
-* This Piece of Software is NOT for pulic sharing.
-* Authour: Ubdussamad <ubdussamad@gmail.com>
-*/
+/**
+ * @file Gsr.h
+ * @author ubdussamad (ubdussamad@gmail.com)
+ * @brief Header File for GSR Library
+ * Part of Project Umbrella
+ * @version V-1.0 REF 20JUN2020
+ * @date 2020-06-20
+ * @license This Piece of Software is NOT for public sharing.
+ * @copyright Copyright (c) 2020, ubdussamad@gmail.com
+ */
 
 // Prototype for GSR class
 

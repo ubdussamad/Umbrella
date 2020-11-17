@@ -1,13 +1,15 @@
-/*
-    File: umbrella.hpp
-    Parent Suite Header for Umbrella Firmware.
-    Part of Project Umbrella
-    V-1.5 REF 08NOV2020
-    Author: Ubdussamad <ubdussamad@gmail.com>
-    This Piece of Software is NOT for public sharing.
-    Copyright (c) 2020, ubdussamad@gmail.com
-    All rights reserved.
-*/
+/**
+ * @file umbrella.hpp
+ * @author ubdussamad (ubdussamad@gmail.com)
+ * @brief Parent Suite Header for Umbrella Firmware.
+ * Part of Project Umbrella
+ * @version V-1.5 REF 08NOV2020
+ * @date 2020-11-8
+ * @license This Piece of Software is NOT for public sharing.
+ * @copyright Copyright (c) 2020, ubdussamad@gmail.com
+ */
+
+
 #ifndef UMBRELLA_H
 #define UMBRELLA_H
 

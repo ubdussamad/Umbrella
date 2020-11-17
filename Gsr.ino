@@ -1,11 +1,14 @@
-/*
-* File: Gsr.ino
-* Part of Project Umbrella
-* Suite for Handling Groove GSR Sensor.
-* V-1.0 REF 20JUN2020
-* This Piece of Software is NOT for pulic sharing.
-* Author: Ubdussamad <ubdussamad@gmail.com>
-*/
+/**
+ * @file Gsr.ino
+ * @author ubdussamad (ubdussamad@gmail.com)
+ * @brief Suite for Handling Groove GSR Sensor.
+ * Part of Project Umbrella
+ * @version V-1.0 REF 20JUN2020
+ * @date 2020-06-20
+ * @license This Piece of Software is NOT for public sharing.
+ * @copyright Copyright (c) 2020, ubdussamad@gmail.com
+ */
+
 #if !defined(GSR_H)
 #define GSR_H
 #include "Gsr.hpp"
@@ -52,11 +55,15 @@ void gsr::set_sample_delay ( const short& value ){
     sample_delay = value > 0 ? value : 10;
 }
 
+
+
 /**
- * @brief Contructor for Gsr class.
- * @param [in] Channel Pin Number
- * @param [in] ADC refrence voltage
- * @param [in] Enable Pin Number (if -1 then no enable pin available).
+ * @brief Construct a new gsr::gsr object \n
+ * Initialize the GSR Sensor Class
+ * 
+ * @param channel Channel Pin Number
+ * @param adc_voltage ADC refrence voltage
+ * @param module_en_pin Enable Pin Number (if -1 then no enable pin available).
  */
 gsr::gsr( const short int& channel, const double& adc_voltage, const short int& module_en_pin ) {
     pinMode( channel,  INPUT);
