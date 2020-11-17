@@ -1,5 +1,7 @@
 # Umbrella
 Code repository for the Umbrella Bio-Medical Device.
+Current Version: V-1.5 REF 08NOV2020
+Read manifest file for more info.
 
 Part of an on going reasearch project.
 This devices includes, GSR, Pulse Oximeter and few other sensors.
