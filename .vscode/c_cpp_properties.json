@@ -3,6 +3,7 @@
         {
             "name": "Linux",
             "includePath": [
+                "/home/samad/Arduino/libraries/SparkFun_Bio_Sensor_Hub_Library-master/src/**",
                 "/home/samad/Downloads/arduino-1.8.13/tools/**",
                 "/home/samad/Downloads/arduino-1.8.13/hardware/arduino/avr/**",
                 "/home/samad/.arduino15/packages/esp32/tools/**",
@@ -10,16 +11,15 @@
                 "${workspaceFolder}/**",
                 "/home/samad/.arduino15/packages/esp32/hardware/esp32/1.0.4/libraries/BLE/src",
                 "/home/samad/.arduino15/packages/esp32/hardware/esp32/1.0.4/tools/sdk/include/**",
-                "/home/samad/Arduino/libraries/Arduino-MAX30100-master/src",
                 "/home/samad/Downloads/arduino-1.8.13/hardware/arduino/avr/**",
                 "/home/samad/Downloads/arduino-1.8.13/tools/**",
                 "/home/samad/Arduino/libraries/**",
-                "/home/samad/Arduino/libraries/U8g2/src/",
-                "/home/samad/Arduino/libraries/U8g2/src/clib",
                 "/home/samad/Downloads/arduino-1.8.13/hardware/tools/avr/avr/include/**",
-                "/home/samad/Arduino/libraries/SparkFun_Bio_Sensor_Hub_Library-master/src/**"
+                "/home/samad/Downloads/arduino-nightly-linux64/arduino-nightly/libraries/**"
             ],
-            "defines": [],
+            "defines": [
+                "USBCON"
+            ],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "gnu11",
             "cppStandard": "c++20",

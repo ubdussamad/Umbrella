@@ -5,14 +5,14 @@
  * Part of Project Umbrella
  * @version V-1.5 REF 08NOV2020
  * @date 2020-11-8
- * @license This Piece of Software is NOT for public sharing.
+ * @license This piece of firmware is in public domian.
  * @copyright Copyright (c) 2020, ubdussamad@gmail.com
  */
 
 
 #ifndef UMBRELLA_H
 #define UMBRELLA_H
-
+  
 #if (!COMPILING)
 #include <Arduino.h>
 #endif
@@ -49,19 +49,19 @@
 #endif
 
 /* Block for mapping BLE Characteristic UUIDs to relevent macros.  */
-#define DEVICE_INFO_SERIVCE                    "180A" // SiG Standard
+#define DEVICE_INFO_SERVICE                    "180A" // SiG Standard
 #define BATTERY_SERVICE_UUID                   "180F" // SiG Standard
 
 #define HR_SERVICE_UUID                        "180D" // SiG Standard Heart Rate Service
-#define HR_CHARACTERISTIC_UUID                 "2A37" // SiG Standard Heart Rate Measurement Serivce
+#define HR_CHARACTERISTIC_UUID                 "2A37" // SiG Standard Heart Rate Measurement Service
 #define HR_CP_CHARACTERISTIC_UUID              "2A39" // SiG Standard Heart rate Control Point
 
 #define POX_SERVICE_UUID                       "1822" // SiG Standard, PulseOximeter Service UUID
 #define POX_CHARACTERISTIC_UUID                "2A5F" // SiG Standard, PulseOximeter Characteristic UUID
-#define POX_PLX_FEATURES                       "2A60" // SiG standard, PluseOx PLC fetures
+#define POX_PLX_FEATURES                       "2A60" // SiG standard, PluseOx PLC features
 
 #define BODY_TEMP_SERVICE_UUID                 "1809" // SiG Standard , Health Thermometer Service
-#define BODY_TEMP_CHARACTERISTIC_UUID          "2A1C" // SiG Standard , Health Thermometer Charac..
+#define BODY_TEMP_CHARACTERISTIC_UUID          "2A1C" // SiG Standard , Health Thermometer Chars..
 #define BODY_TEMP_T_DESC_CHARACTERISTIC_UUID   "2A1F" // Temperature Celsius Descriptor
 #define BODY_TEMP_T_DESIG_CHARACTERISTIC_UUID  "2A1D" // Temp type Descriptor
 
@@ -86,11 +86,11 @@ Lets Assume some values according to their sizes:
  11000010    , 01010000        , 0000000000010001 , 0010110100001000     | Binary Values
  C2          , 50              , 0011             , 2d08                 | Hex Values
 
-Now Since we could only send an 8bit(1Byte or an octet) unisgned int array,
+Now Since we could only send an 8bit(1Byte or an octet) unsigned int array,
 we have to split a 16bit(2bytes)  into 2 Consecutive octets in an array.
 
 For example, say we have 8fe2 we represent it in an array as {8f,e2}.
-This way of represnting the larger octet (8f) first and the smaller octet
+This way of representing the larger octet (8f) first and the smaller octet
 last is called Big Endian Order (MSO to LSO)
 
 But, In case of BLE standard we send it in the Little-Endian order (LSO to MSO).
@@ -102,7 +102,7 @@ FLAGS (8BIT)   , Heart Rate(8BIT), Energy Exp(16BIT), RR (16BIT)
  { C2          , 50              , 11,   00         , 08,    2d }
    8BIT        , 8BIT            , LSO,  MSO        , LSO,   MSO
 
-   To many, this'd look unintuitive and unnatural, but some systems do
+   To many, this'd look un intuitive and unnatural, but some systems do
    work this way so do we have to work this way too :(.
    
 */
@@ -113,6 +113,13 @@ FLAGS (8BIT)   , Heart Rate(8BIT), Energy Exp(16BIT), RR (16BIT)
 #define BLE_WRITE     BLECharacteristic::PROPERTY_WRITE
 #define BLE_INDICATE  BLECharacteristic::PROPERTY_INDICATE
 
+/**
+ * @brief Block Containing Error codes
+ * for the error code bit field.
+ */
+#define POX_ERROR_BIT 1<<8
+#define GSR_ERROR_BIT 1<<7
+#define GYRO_ERR_BIT  1<<6
 
 /* Block for mapping pinout to relevant macros.*/
 #define ADC0_CH1        36
@@ -123,8 +130,8 @@ FLAGS (8BIT)   , Heart Rate(8BIT), Energy Exp(16BIT), RR (16BIT)
 #define I2C_SCL         22
 #define FLASH_BTN       0
 #define ADC_VOLTAGE     3.3
-#define RESET_PIN_POX   4 /* Should be Changed. */
-#define MFIO_PIN_POX    5 /* Should be Changed. */
+#define RESET_PIN_POX   4 /* TODO: Should be Changed. */
+#define MFIO_PIN_POX    5 /* TODO: Should be Changed. */
 
 /* Block for OTHER macros */
 #define uS_TO_S_FACTOR 1000000ULL  /* Conversion factor for micro seconds to seconds */
@@ -154,7 +161,7 @@ auto sensorGsr =  gsr(ADC0_CH1 , ADC_VOLTAGE , GSR_PWR );
 U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2 ( U8G2_R2 , U8X8_PIN_NONE, I2C_SCL , I2C_SDA );
 #endif
 #if (ENABLE_HR)
-// Takes address, reset pin, and MFIO pin.
+// TODO: Revise pin number of reset pin, and MFIO pin.
 SparkFun_Bio_Sensor_Hub bioHub(RESET_PIN_POX, MFIO_PIN_POX); 
 #endif
 
@@ -166,10 +173,11 @@ namespace uSysVars {
 
 /** UPDATE:
  *  V-1.5 REF 08NOV2020
- *  System Wide Error Reporting Variable.
+ *  System Wide Error Reporting Bit Field.
  *  If a designated bit is 1, it means thats there was an error.
  *  MSB -> LSB
  *  POX_ERROR_BIT, GSR_ERROR_BIT, GYRO_ERR_BIT, N/A, N/A, N/A, N/A, N/A
+ */
 uint8_t errorCode = 0b00000000;
 
 
@@ -212,11 +220,9 @@ bool pulseOxState(true);
 /* This block decalers global constructor handles for BLE characteristics/Services and Servers. */
 BLEServer           *umbrellaServer;
 // uConnectionCallback *svCb;
-BLECharacteristic   *hrCharacteristic;
-BLECharacteristic   *poxCharacteristic;
-BLECharacteristic   *gsrCharacteristic;
-BLECharacteristic   *tempCharacteristic;
-BLECharacteristic   *gyroCharacteristic;
+BLECharacteristic *hrCharacteristic;
+BLECharacteristic *tempCharacteristic;
+BLECharacteristic *gyroCharacteristic;
 
 }
 

@@ -5,7 +5,7 @@
  * Part of Project Umbrella
  * @version V-1.5 REF 08NOV2020
  * @date 2020-11-8
- * @license This Piece of Software is NOT for public sharing.
+ * @license This piece of firmware is in public domian.
  * @copyright Copyright (c) 2020, ubdussamad@gmail.com
  */
 
@@ -21,6 +21,7 @@
 #define ENABLE_BLINKING                   1
 #define ENABLE_CONNECTION_TIMEOUT_SLEEP   0
 #define LOG Serial.println
+
 /* Timeout Macros Block */
 #define DATA_NOTIFY_DELAY 60000
 #define BEATS_TO_COUNT_BEFORE_NOTIFYING 15
@@ -40,10 +41,10 @@ void setup () {
 
   Serial.println("Initializing.");
 
-  pinMode( LED_BLUE, OUTPUT);
-  pinMode( LED_RED , OUTPUT);
-  pinMode( I2C_SDA , OUTPUT);
-  pinMode( I2C_SCL , OUTPUT);
+  pinMode( LED_BLUE , OUTPUT);
+  pinMode( LED_RED  , OUTPUT);
+  pinMode( I2C_SDA  , OUTPUT);
+  pinMode( I2C_SCL  , OUTPUT);
   pinMode( FLASH_BTN, INPUT);
 
 
@@ -74,16 +75,18 @@ void setup () {
 
   #if (ENABLE_HR) // This block contains the BLE setup for P-Ox as well.
   
-  Wire.begin();
+  Wire.begin(I2C_SDA, I2C_SCL); // TODO: This might cause problems for the LCD library and the Gyro Library 
   uSysVars::hrInitFailed = bioHub.begin();
 
   if (uSysVars::hrInitFailed) {
     LOG("ERROR: Failed to initialize pulse oximeter");
+    uSysVars::errorCode |= POX_ERROR_BIT;
   }
   else {
 
       int error = bioHub.configBpm(MODE_ONE); // Configuring just the BPM settings. 
       if (error) {
+        uSysVars::errorCode |= POX_ERROR_BIT;
       }
 
     pulseOx.setOnBeatDetectedCallback(onBeatDetectedCb); /* Callback if a beat is detected, notify the Client then. */
@@ -165,13 +168,13 @@ void loop () {
 
       #if(ENABLE_CONNECTION_TIMEOUT_SLEEP)
       /**
-       * TODO: Maybe impliment dynamic sleep Time.
-       * Like if the device dosen't gets connected
+       * TODO: Maybe implement dynamic sleep Time.
+       * Like if the device doesn't gets connected
        * 5 times in a row, just increase the sleep time.
        * 
        * The number of cycles would be monitored by counter
        * stored in RTC memory so it won't perish after 
-       * deelpsleep.
+       * deep sleep.
        * 
        * Although this feature works, other
        * improvements can be made to it.

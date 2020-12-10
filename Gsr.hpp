@@ -5,7 +5,7 @@
  * Part of Project Umbrella
  * @version V-1.0 REF 20JUN2020
  * @date 2020-06-20
- * @license This Piece of Software is NOT for public sharing.
+ * @license This piece of firmware is in public domian.
  * @copyright Copyright (c) 2020, ubdussamad@gmail.com
  */
 

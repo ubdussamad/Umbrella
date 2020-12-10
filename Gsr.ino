@@ -5,7 +5,7 @@
  * Part of Project Umbrella
  * @version V-1.0 REF 20JUN2020
  * @date 2020-06-20
- * @license This Piece of Software is NOT for public sharing.
+ * @license This piece of firmware is in public domian.
  * @copyright Copyright (c) 2020, ubdussamad@gmail.com
  */
 
@@ -62,7 +62,7 @@ void gsr::set_sample_delay ( const short& value ){
  * Initialize the GSR Sensor Class
  * 
  * @param channel Channel Pin Number
- * @param adc_voltage ADC refrence voltage
+ * @param adc_voltage ADC refernce voltage
  * @param module_en_pin Enable Pin Number (if -1 then no enable pin available).
  */
 gsr::gsr( const short int& channel, const double& adc_voltage, const short int& module_en_pin ) {
@@ -81,7 +81,7 @@ gsr::gsr( const short int& channel, const double& adc_voltage, const short int& 
     v_adc = adc_voltage;
 }
 
-/* Set the resoulution of the ADC in use. 
+/* Set the resolution of the ADC in use. 
    Parms: 2^Resolution ( 1024 for 10Bit ADC )
    Return: void
 */
