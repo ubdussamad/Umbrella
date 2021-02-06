@@ -1,0 +1,23 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "/home/samad/.arduino15/packages/esp32/tools/**",
+                "/home/samad/Downloads/arduino-1.8.13-linux64/arduino-1.8.13/libraries/**",
+                "${workspaceFolder}/**",
+                "/home/samad/.arduino15/packages/esp32/hardware/esp32/1.0.5-rc4/**",
+                "/home/samad/Arduino/libraries/**"
+            ],
+            "defines": [
+                "USBCON"
+            ],
+            "compilerPath": "/usr/bin/clang-11",
+            "cStandard": "c17",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "clang-x64",
+            "forcedInclude": []
+        }
+    ],
+    "version": 4
+}

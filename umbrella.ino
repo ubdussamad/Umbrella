@@ -89,7 +89,7 @@ void setup () {
         uSysVars::errorCode |= POX_ERROR_BIT;
       }
 
-    pulseOx.setOnBeatDetectedCallback(onBeatDetectedCb); /* Callback if a beat is detected, notify the Client then. */
+    // pulseOx.setOnBeatDetectedCallback(onBeatDetectedCb); /* Callback if a beat is detected, notify the Client then. */
 
 
     BLEService *hrService = uSysVars::umbrellaServer->createService( HR_SERVICE_UUID );
@@ -154,6 +154,7 @@ void loop () {
       pulseOx.resume();
       uSysVars::pulseOxState = true;
     }
+    
     pulseOx.update(); // This will eventually call the BeatDetected Callback
   }
   else {

@@ -149,7 +149,7 @@ static unsigned char uLogo[] PROGMEM = {
    0xc2, 0x3f, 0xff, 0x11, 0xfa, 0x3f, 0xff, 0x17, 0xfe, 0x1f, 0xfe, 0x1f,
    0xfe, 0x1f, 0xfe, 0x1f, 0xf8, 0x0f, 0xfc, 0x07, 0xf0, 0x0f, 0xfc, 0x03,
    0xe0, 0x07, 0xfc, 0x01, 0xc0, 0x07, 0xf8, 0x00, 0x80, 0x07, 0x78, 0x00,
-   0x80, 0x03, 0x30, 0x00, 0x00, 0xff, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00   
+   0x80, 0x03, 0x30, 0x00, 0x00, 0xff, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00
    };
 
 
@@ -162,7 +162,7 @@ U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2 ( U8G2_R2 , U8X8_PIN_NONE, I2C_SCL ,
 #endif
 #if (ENABLE_HR)
 // TODO: Revise pin number of reset pin, and MFIO pin.
-SparkFun_Bio_Sensor_Hub bioHub(RESET_PIN_POX, MFIO_PIN_POX); 
+SparkFun_Bio_Sensor_Hub bioHub(RESET_PIN_POX, MFIO_PIN_POX);
 #endif
 
 
@@ -179,8 +179,6 @@ namespace uSysVars {
  *  POX_ERROR_BIT, GSR_ERROR_BIT, GYRO_ERR_BIT, N/A, N/A, N/A, N/A, N/A
  */
 uint8_t errorCode = 0b00000000;
-
-
 
 /* System wide counter. */
 #if (ENABLE_SLEEPING)
@@ -218,11 +216,11 @@ bool freshRestart(true);
 bool pulseOxState(true);
 
 /* This block decalers global constructor handles for BLE characteristics/Services and Servers. */
-BLEServer         *umbrellaServer;
-// uConnectionCallback *svCb;
-BLECharacteristic *hrCharacteristic;
-BLECharacteristic *tempCharacteristic;
-BLECharacteristic *gyroCharacteristic;
+BLEServer               *umbrellaServer;
+uConnectionCallback     *svCb;
+BLECharacteristic       *hrCharacteristic;
+BLECharacteristic       *tempCharacteristic;
+BLECharacteristic       *gyroCharacteristic;
 
 }
 

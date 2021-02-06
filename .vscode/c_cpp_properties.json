@@ -15,7 +15,9 @@
                 "/home/samad/Downloads/arduino-1.8.13/tools/**",
                 "/home/samad/Arduino/libraries/**",
                 "/home/samad/Downloads/arduino-1.8.13/hardware/tools/avr/avr/include/**",
-                "/home/samad/Downloads/arduino-nightly-linux64/arduino-nightly/libraries/**"
+                "/home/samad/Downloads/arduino-nightly-linux64/arduino-nightly/libraries/**",
+                "/home/samad/Downloads/arduino-1.8.13-linux64/arduino-1.8.13/libraries/**",
+                "/home/samad/.arduino15/packages/esp32/hardware/esp32/1.0.5-rc4/**"
             ],
             "defines": [
                 "USBCON"
