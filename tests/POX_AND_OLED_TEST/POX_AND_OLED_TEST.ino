@@ -61,7 +61,7 @@ void setup(void) {
   if(error == 0){ // Zero errors
     Serial.println("Sensor configured.");
     u8g2.clearBuffer();
-    u8g2.drawStr(0,10, "POX is ONLINE" );  // write something to the internal memory
+    u8g2.drawStr(0,10, "POX is ONLINE [O]" );  // write something to the internal memory
     u8g2.sendBuffer();
     delay(2000);
     u8g2.clearBuffer();
@@ -77,10 +77,10 @@ void loop(void) {
 
   body = bioHub.readBpm();
   if ( body.confidence > 80) {
-    u8g2.drawStr(110,15, "*" );  // write something to the internal memory
+    u8g2.drawStr(125,15, "*" );  // write something to the internal memory
     u8g2.sendBuffer();
     delay(200);
-    u8g2.drawStr(110,15, " " );  // write something to the internal memory
+    u8g2.drawStr(125,15, " " );  // write something to the internal memory
     u8g2.sendBuffer();
     sample_counter++;
     ecg_sum+= body.heartRate;
